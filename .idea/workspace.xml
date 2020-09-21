@@ -5,18 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a9695a34-7f89-45f0-9395-6b90c55e376b" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/core/src/main/java/com/github/bdqfork/core/command/AbstractCommand.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/core/src/main/java/com/github/bdqfork/core/command/ModifyCommand.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/core/src/main/java/com/github/bdqfork/core/command/QueryCommand.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/core/src/main/java/com/github/bdqfork/core/command/UndoCommand.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/core/src/main/java/com/github/bdqfork/core/DataBase.java" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/main/java/com/github/bdqfork/core/Database.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/core/src/main/java/com/github/bdqfork/core/Server.java" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/main/java/com/github/bdqfork/core/Server.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/core/src/main/java/com/github/bdqfork/core/command/Command.java" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/main/java/com/github/bdqfork/core/command/Command.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/core/src/main/java/com/github/bdqfork/core/command/GetStringValue.java" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/main/java/com/github/bdqfork/core/command/GetStringValue.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/core/src/main/java/com/github/bdqfork/core/command/SetStringValue.java" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/main/java/com/github/bdqfork/core/command/SetStringValue.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/core/src/main/java/com/github/bdqfork/core/transaction/TransactionManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/main/java/com/github/bdqfork/core/transaction/TransactionManager.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/core/src/main/java/com/github/bdqfork/core/transaction/UndoLog.java" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/main/java/com/github/bdqfork/core/transaction/UndoLog.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -145,7 +134,7 @@
       <workItem from="1600615308041" duration="543000" />
       <workItem from="1600616724769" duration="919000" />
       <workItem from="1600617707975" duration="58000" />
-      <workItem from="1600695638934" duration="4364000" />
+      <workItem from="1600695638934" duration="4446000" />
     </task>
     <servers />
   </component>
