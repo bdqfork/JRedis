@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/JRedis.iml" filepath="$PROJECT_DIR$/.idea/modules/JRedis.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/client/JRedis.client.iml" filepath="$PROJECT_DIR$/.idea/modules/client/JRedis.client.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/client/JRedis.client.main.iml" filepath="$PROJECT_DIR$/.idea/modules/client/JRedis.client.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/client/JRedis.client.test.iml" filepath="$PROJECT_DIR$/.idea/modules/client/JRedis.client.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/core/JRedis.core.iml" filepath="$PROJECT_DIR$/.idea/modules/core/JRedis.core.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/core/JRedis.core.main.iml" filepath="$PROJECT_DIR$/.idea/modules/core/JRedis.core.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/core/JRedis.core.test.iml" filepath="$PROJECT_DIR$/.idea/modules/core/JRedis.core.test.iml" />
+    </modules>
+  </component>
+</project>

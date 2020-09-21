@@ -9,27 +9,13 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author bdq
  * @since 2020/9/20
  */
-public class DataBase {
+public class Database {
     private final Map<String, Object> dictMap;
     private final Map<String, Long> expireMap;
 
-    public DataBase() {
+    public Database() {
         dictMap = new ConcurrentHashMap<>(256);
         expireMap = new ConcurrentHashMap<>(256);
-    }
-
-    /**
-     * 插入数据
-     *
-     * @param key      键
-     * @param value    值
-     * @param expireAt 过期时间
-     */
-    public void insert(String key, Object value, Long expireAt) {
-        dictMap.put(key, value);
-        if (expireAt != -1) {
-            expireMap.put(key, expireAt);
-        }
     }
 
     /**
@@ -48,7 +34,7 @@ public class DataBase {
      * @param key   键
      * @param value 值
      */
-    public void update(String key, Object value, Long expireAt) {
+    public void saveOrUpdate(String key, Object value, Long expireAt) {
         dictMap.put(key, value);
         if (expireAt != -1) {
             expireMap.put(key, expireAt);
@@ -64,7 +50,7 @@ public class DataBase {
     public Object get(String key) {
         if (ttl(key) > 0) {
             return dictMap.get(key);
-        }else {
+        } else {
             dictMap.remove(key);
             expireMap.remove(key);
             return null;
@@ -72,11 +58,20 @@ public class DataBase {
     }
 
     /**
-     * 查询数据
+     * 查询数据剩余过期时间
      *
      * @param key 键
      */
     public Long ttl(String key) {
         return expireMap.get(key) - System.currentTimeMillis();
+    }
+
+    /**
+     * 查询数据过期时间
+     *
+     * @param key 键
+     */
+    public Long ttlAt(String key) {
+        return expireMap.get(key);
     }
 }

@@ -11,18 +11,36 @@ import java.util.Map;
  */
 public class UndoLog implements Serializable {
     private final Long transactionId;
-    private final Map<String, Object> datas;
+    private final Integer databaseId;
+    private Map<String, Object> dataMap;
+    private Map<String, Long> expireMap;
 
-    public UndoLog(Long transactionId, Map<String, Object> datas) {
+    public UndoLog(Long transactionId, Integer databaseId) {
         this.transactionId = transactionId;
-        this.datas = datas;
+        this.databaseId = databaseId;
     }
 
     public Long getTransactionId() {
         return transactionId;
     }
 
-    public Map<String, Object> getDatas() {
-        return datas;
+    public Integer getDatabaseId() {
+        return databaseId;
+    }
+
+    public Map<String, Object> getDataMap() {
+        return dataMap;
+    }
+
+    public void setDataMap(Map<String, Object> dataMap) {
+        this.dataMap = dataMap;
+    }
+
+    public Map<String, Long> getExpireMap() {
+        return expireMap;
+    }
+
+    public void setExpireMap(Map<String, Long> expireMap) {
+        this.expireMap = expireMap;
     }
 }

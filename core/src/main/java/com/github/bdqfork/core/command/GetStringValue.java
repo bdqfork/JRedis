@@ -1,6 +1,6 @@
 package com.github.bdqfork.core.command;
 
-import com.github.bdqfork.core.DataBase;
+import com.github.bdqfork.core.Database;
 
 /**
  * 从数据库中查询值
@@ -8,17 +8,15 @@ import com.github.bdqfork.core.DataBase;
  * @author bdq
  * @since 2020/9/20
  */
-public class GetStringValue implements Command {
-    private final DataBase dataBase;
-    private final String key;
+public class GetStringValue extends AbstractCommand implements QueryCommand {
 
-    public GetStringValue(DataBase dataBase, String key) {
-        this.dataBase = dataBase;
-        this.key = key;
+    public GetStringValue(String key) {
+        super(key);
     }
 
     @Override
-    public Object execute() {
-        return dataBase.get(key);
+    public Object execute(Database database) throws Exception {
+        return database.get(key);
     }
+    
 }

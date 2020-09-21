@@ -13,7 +13,7 @@ import java.util.List;
 public class Server {
     private static final String DEFAULT_CONFIG_FILE_PATH = "jredis.conf";
     private Configuration configuration;
-    private List<DataBase> dataBases;
+    private List<Database> databases;
 
     public Server(String host, Integer port) {
         this(host, port, DEFAULT_CONFIG_FILE_PATH);
