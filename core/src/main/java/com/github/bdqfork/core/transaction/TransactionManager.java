@@ -115,6 +115,7 @@ public class TransactionManager {
             redoLogs.offer(redoLog);
             undoLog.setValid(false);
         }
+        undoLogs.clear();
     }
 
     static class Transaction {
