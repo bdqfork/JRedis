@@ -30,6 +30,7 @@ public class TransactionManager {
      */
     public Long commit(List<Command> commands) {
         Long transactionId = newTransactionId();
+        // todo: 创建RedoLog
         // todo: 创建UndoLog
         transactionMap.put(transactionId, commands);
         return transactionId;
@@ -46,6 +47,7 @@ public class TransactionManager {
         for (Command command : transactionMap.get(transactionId)) {
             result = command.execute();
         }
+        undoLogMap.remove(transactionId);
         return result;
     }
 
@@ -56,6 +58,8 @@ public class TransactionManager {
      */
     public void rollback(Long transactionId) {
         UndoLog undoLog = undoLogMap.get(transactionId);
-        undoLog.getCommands().forEach(Command::execute);
+        undoLog.getDatas().forEach((k, v) -> {
+            //todo: 插入数据库
+        });
     }
 }
