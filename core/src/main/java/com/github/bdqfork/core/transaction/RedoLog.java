@@ -1,31 +1,57 @@
 package com.github.bdqfork.core.transaction;
 
-import com.github.bdqfork.core.command.Command;
-
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
- * 记录已经成功的事务操作
+ * 记录已经成功的操作
  *
  * @author bdq
  * @since 2020/09/21
  */
 public class RedoLog implements Serializable {
-    private final String version;
-    private final List<Command> commands;
+    private Long logId;
+    private Integer databaseId;
+    private String key;
+    private Object value;
+    private Long expireAt;
 
-    public RedoLog(String version, List<Command> commands) {
-        this.version = version;
-        this.commands = new ArrayList<>(commands);
+    public Long getLogId() {
+        return logId;
     }
 
-    public String getVersion() {
-        return version;
+    public void setLogId(Long logId) {
+        this.logId = logId;
     }
 
-    public List<Command> getCommands() {
-        return commands;
+    public void setDatabaseId(Integer databaseId) {
+        this.databaseId = databaseId;
+    }
+
+    public Integer getDatabaseId() {
+        return databaseId;
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
+    }
+
+    public Object getValue() {
+        return value;
+    }
+
+    public void setValue(Object value) {
+        this.value = value;
+    }
+
+    public Long getExpireAt() {
+        return expireAt;
+    }
+
+    public void setExpireAt(Long expireAt) {
+        this.expireAt = expireAt;
     }
 }

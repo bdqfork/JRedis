@@ -2,8 +2,6 @@ package com.github.bdqfork.core.transaction;
 
 import com.github.bdqfork.core.Database;
 import com.github.bdqfork.core.command.Command;
-import com.github.bdqfork.core.command.ModifyCommand;
-import com.github.bdqfork.core.command.UndoCommand;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -19,8 +17,8 @@ public class TransactionManager {
     private static final String VERSION = "0.1";
     private static final AtomicLong ID = new AtomicLong(0);
     private final Map<Long, Transaction> transactionMap = new ConcurrentHashMap<>();
-    private final Map<Long, UndoLog> undoLogMap = new ConcurrentHashMap<>();
-    private final List<RedoLog> redoLogs = new LinkedList<>();
+    private final List<UndoLog> undoLogs = new LinkedList<>();
+    private final Queue<RedoLog> redoLogs = new LinkedList<>();
     private final List<Database> databases;
 
     private static Long newTransactionId() {
@@ -39,35 +37,8 @@ public class TransactionManager {
      */
     public Long prepare(int databaseId, List<Command> commands) {
         Long transactionId = newTransactionId();
-
-        RedoLog redoLog = new RedoLog(VERSION, commands);
-        redoLogs.add(redoLog);
-
-        UndoLog undoLog = createUndoLog(databaseId, transactionId, commands);
-        undoLogMap.put(transactionId, undoLog);
-
-        transactionMap.put(transactionId, new Transaction(databaseId, commands));
+        transactionMap.put(transactionId, new Transaction(transactionId, databaseId, commands));
         return transactionId;
-    }
-
-    private UndoLog createUndoLog(int databaseId, Long transactionId, List<Command> commands) {
-        UndoLog undoLog = new UndoLog(transactionId, databaseId);
-        Map<String, Object> dataMap = new HashMap<>();
-        Map<String, Long> expireMap = new HashMap<>();
-
-        Database database = databases.get(databaseId);
-
-        for (Command command : commands) {
-            if (command instanceof ModifyCommand) {
-                String key = command.getKey();
-                dataMap.put(key, database.get(key));
-                expireMap.put(key, database.ttlAt(key));
-            }
-        }
-
-        undoLog.setDataMap(dataMap);
-        undoLog.setExpireMap(expireMap);
-        return undoLog;
     }
 
     /**
@@ -78,47 +49,84 @@ public class TransactionManager {
      */
     public Object commit(Long transactionId) throws Exception {
         Object result = null;
+
         Transaction transaction = transactionMap.get(transactionId);
-        Database database = databases.get(transaction.databaseId);
+        int databaseId = transaction.databaseId;
+        Database database = databases.get(databaseId);
         for (Command command : transaction.commands) {
+            String key = command.getKey();
+
+            UndoLog undoLog = createUndoLog(databaseId, key);
+            undoLogs.add(undoLog);
+
             result = command.execute(database);
+
+            RedoLog redoLog = createRedoLog(databaseId, command.getKey());
+            redoLogs.offer(redoLog);
+
+            undoLogs.remove(undoLog);
         }
-        undoLogMap.remove(transactionId);
+
         return result;
+    }
+
+    private UndoLog createUndoLog(int databaseId, String key) {
+        Database database = databases.get(databaseId);
+
+        Object value = database.get(key);
+        Long expireAt = database.ttlAt(key) == null ? -1 : database.ttlAt(key);
+
+        UndoLog undoLog = new UndoLog();
+        undoLog.setDatabaseId(databaseId);
+        undoLog.setKey(key);
+        undoLog.setValue(value);
+        undoLog.setExpireAt(expireAt);
+
+        return undoLog;
+    }
+
+    private RedoLog createRedoLog(int databaseId, String key) {
+        Database database = databases.get(databaseId);
+
+        Object value = database.get(key);
+        Long expireAt = database.ttlAt(key) == null ? -1 : database.ttlAt(key);
+
+        RedoLog redoLog = new RedoLog();
+        redoLog.setDatabaseId(databaseId);
+        redoLog.setKey(key);
+        redoLog.setValue(value);
+        redoLog.setExpireAt(expireAt);
+
+        return redoLog;
     }
 
     /**
      * 回滚事务
-     *
-     * @param transactionId 事务id
      */
-    public void rollback(Long transactionId) {
-        UndoLog undoLog = undoLogMap.get(transactionId);
-
-        int databaseId = undoLog.getDatabaseId();
-
-        Database database = databases.get(databaseId);
-
-        UndoCommand undoCommand = new UndoCommand(undoLog);
-        RedoLog redoLog = new RedoLog(VERSION, Collections.singletonList(undoCommand));
-        redoLogs.add(redoLog);
-
-        try {
-            undoCommand.execute(database);
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
+    public void rollback() {
+        for (UndoLog undoLog : undoLogs) {
+            if (!undoLog.isValid()) {
+                continue;
+            }
+            int databaseId = undoLog.getDatabaseId();
+            Database database = databases.get(databaseId);
+            database.saveOrUpdate(undoLog.getKey(), undoLog.getValue(), undoLog.getExpireAt());
+            RedoLog redoLog = createRedoLog(databaseId, undoLog.getKey());
+            redoLogs.offer(redoLog);
+            undoLog.setValid(false);
         }
-
-        undoLogMap.remove(transactionId);
     }
 
     static class Transaction {
+        private final Long transactionId;
         private final Integer databaseId;
         private final List<Command> commands;
 
-        public Transaction(Integer databaseId, List<Command> commands) {
+        public Transaction(Long transactionId, Integer databaseId, List<Command> commands) {
+            this.transactionId = transactionId;
             this.databaseId = databaseId;
             this.commands = commands;
         }
+
     }
 }

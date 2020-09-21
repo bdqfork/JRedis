@@ -1,7 +1,6 @@
 package com.github.bdqfork.core.transaction;
 
 import java.io.Serializable;
-import java.util.Map;
 
 /**
  * 在事务执行前，记录数据的状态，以供发生异常之后进行回滚操作
@@ -10,37 +9,49 @@ import java.util.Map;
  * @since 2020/09/21
  */
 public class UndoLog implements Serializable {
-    private final Long transactionId;
-    private final Integer databaseId;
-    private Map<String, Object> dataMap;
-    private Map<String, Long> expireMap;
+    private Integer databaseId;
+    private String key;
+    private Object value;
+    private Long expireAt;
+    private boolean valid;
 
-    public UndoLog(Long transactionId, Integer databaseId) {
-        this.transactionId = transactionId;
+    public void setDatabaseId(Integer databaseId) {
         this.databaseId = databaseId;
-    }
-
-    public Long getTransactionId() {
-        return transactionId;
     }
 
     public Integer getDatabaseId() {
         return databaseId;
     }
 
-    public Map<String, Object> getDataMap() {
-        return dataMap;
+    public String getKey() {
+        return key;
     }
 
-    public void setDataMap(Map<String, Object> dataMap) {
-        this.dataMap = dataMap;
+    public void setKey(String key) {
+        this.key = key;
     }
 
-    public Map<String, Long> getExpireMap() {
-        return expireMap;
+    public Object getValue() {
+        return value;
     }
 
-    public void setExpireMap(Map<String, Long> expireMap) {
-        this.expireMap = expireMap;
+    public void setValue(Object value) {
+        this.value = value;
+    }
+
+    public Long getExpireAt() {
+        return expireAt;
+    }
+
+    public void setExpireAt(Long expireAt) {
+        this.expireAt = expireAt;
+    }
+
+    public boolean isValid() {
+        return valid;
+    }
+
+    public void setValid(boolean valid) {
+        this.valid = valid;
     }
 }
