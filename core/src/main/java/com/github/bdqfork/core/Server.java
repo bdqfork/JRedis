@@ -2,6 +2,8 @@ package com.github.bdqfork.core;
 
 import com.github.bdqfork.core.config.Configuration;
 
+import java.util.List;
+
 /**
  * 服务端，接收用户请求
  *
@@ -11,6 +13,7 @@ import com.github.bdqfork.core.config.Configuration;
 public class Server {
     private static final String DEFAULT_CONFIG_FILE_PATH = "jredis.conf";
     private Configuration configuration;
+    private List<DataBase> dataBases;
 
     public Server(String host, Integer port) {
         this(host, port, DEFAULT_CONFIG_FILE_PATH);

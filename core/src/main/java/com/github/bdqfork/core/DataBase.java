@@ -21,22 +21,15 @@ public class DataBase {
     /**
      * 插入数据
      *
-     * @param key   键
-     * @param value 值
-     */
-    public void insert(String key, Object value) {
-
-    }
-
-    /**
-     * 插入数据
-     *
      * @param key      键
      * @param value    值
      * @param expireAt 过期时间
      */
     public void insert(String key, Object value, Long expireAt) {
-
+        dictMap.put(key, value);
+        if (expireAt != -1) {
+            expireMap.put(key, expireAt);
+        }
     }
 
     /**
@@ -45,7 +38,8 @@ public class DataBase {
      * @param key 键
      */
     public void delete(String key) {
-
+        dictMap.remove(key);
+        expireMap.remove(key);
     }
 
     /**
@@ -54,9 +48,13 @@ public class DataBase {
      * @param key   键
      * @param value 值
      */
-    public void update(String key, Object value) {
-
+    public void update(String key, Object value, Long expireAt) {
+        dictMap.put(key, value);
+        if (expireAt != -1) {
+            expireMap.put(key, expireAt);
+        }
     }
+
 
     /**
      * 查询数据
@@ -64,6 +62,21 @@ public class DataBase {
      * @param key 键
      */
     public Object get(String key) {
-        return null;
+        if (ttl(key) > 0) {
+            return dictMap.get(key);
+        }else {
+            dictMap.remove(key);
+            expireMap.remove(key);
+            return null;
+        }
+    }
+
+    /**
+     * 查询数据
+     *
+     * @param key 键
+     */
+    public Long ttl(String key) {
+        return expireMap.get(key) - System.currentTimeMillis();
     }
 }
