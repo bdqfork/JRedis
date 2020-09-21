@@ -9,19 +9,10 @@ import java.io.Serializable;
  * @since 2020/09/21
  */
 public class RedoLog implements Serializable {
-    private Long logId;
     private Integer databaseId;
     private String key;
     private Object value;
     private Long expireAt;
-
-    public Long getLogId() {
-        return logId;
-    }
-
-    public void setLogId(Long logId) {
-        this.logId = logId;
-    }
 
     public void setDatabaseId(Integer databaseId) {
         this.databaseId = databaseId;
