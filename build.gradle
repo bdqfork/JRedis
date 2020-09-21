@@ -1,0 +1,21 @@
+ext {
+    libraries = [
+            'netty' : '4.1.52.Final'
+    ]
+}
+
+buildscript {
+    repositories {
+        maven {
+            url 'http://maven.aliyun.com/nexus/content/groups/public/'
+        }
+        maven {
+            url 'http://maven.aliyun.com/nexus/content/repositories/jcenter'
+        }
+    }
+}
+
+allprojects {
+    group = 'com.github.bdqfork'
+    version = '0.1.0-SNAPSHOT'
+}

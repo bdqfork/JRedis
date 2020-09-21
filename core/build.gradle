@@ -1,0 +1,13 @@
+plugins {
+    id 'java'
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+def libs = rootProject.ext.libraries
+
+dependencies {
+    implementation "io.netty:netty-all:${libs.netty}"
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
