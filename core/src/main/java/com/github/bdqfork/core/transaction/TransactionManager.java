@@ -32,12 +32,12 @@ public class TransactionManager {
     }
 
     /**
-     * 提交事务
+     * 准备事务
      *
      * @param commands
      * @return Long 返回事务id
      */
-    public Long commit(int databaseId, List<Command> commands) {
+    public Long prepare(int databaseId, List<Command> commands) {
         Long transactionId = newTransactionId();
 
         RedoLog redoLog = new RedoLog(VERSION, commands);
@@ -71,12 +71,12 @@ public class TransactionManager {
     }
 
     /**
-     * 执行事务
+     * 提交事务
      *
      * @param transactionId 事务id
      * @return Object 事务执行结果
      */
-    public Object execute(Long transactionId) throws Exception {
+    public Object commit(Long transactionId) throws Exception {
         Object result = null;
         Transaction transaction = transactionMap.get(transactionId);
         Database database = databases.get(transaction.databaseId);
