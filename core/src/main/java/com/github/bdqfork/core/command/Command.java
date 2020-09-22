@@ -1,6 +1,7 @@
 package com.github.bdqfork.core.command;
 
 import com.github.bdqfork.core.Database;
+import com.github.bdqfork.core.exception.FailedExecuteCommandException;
 
 import java.io.Serializable;
 
@@ -12,7 +13,7 @@ import java.io.Serializable;
  */
 public interface Command extends Serializable {
 
-    Object execute(Database database) throws Exception;
+    Object execute(Database database) throws FailedExecuteCommandException;
 
     String getKey();
 }

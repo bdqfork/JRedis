@@ -1,6 +1,7 @@
 package com.github.bdqfork.core.command;
 
 import com.github.bdqfork.core.Database;
+import com.github.bdqfork.core.exception.FailedExecuteCommandException;
 
 /**
  * 插入键值对到数据库中
@@ -23,7 +24,7 @@ public class SetStringValue extends AbstractCommand implements ModifyCommand {
     }
 
     @Override
-    public Object execute(Database database) throws Exception {
+    public Object execute(Database database) throws FailedExecuteCommandException {
         database.saveOrUpdate(key, value, expireAt);
         return null;
     }

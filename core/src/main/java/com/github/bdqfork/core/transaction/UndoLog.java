@@ -9,11 +9,22 @@ import java.io.Serializable;
  * @since 2020/09/21
  */
 public class UndoLog implements Serializable {
+    /**
+     * 数据库id
+     */
     private Integer databaseId;
+    /**
+     * key
+     */
     private String key;
+    /**
+     * value
+     */
     private Object value;
+    /**
+     * 过期时间
+     */
     private Long expireAt;
-    private boolean valid;
 
     public void setDatabaseId(Integer databaseId) {
         this.databaseId = databaseId;
@@ -47,11 +58,4 @@ public class UndoLog implements Serializable {
         this.expireAt = expireAt;
     }
 
-    public boolean isValid() {
-        return valid;
-    }
-
-    public void setValid(boolean valid) {
-        this.valid = valid;
-    }
 }

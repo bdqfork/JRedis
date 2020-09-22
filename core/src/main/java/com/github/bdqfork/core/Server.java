@@ -1,5 +1,6 @@
 package com.github.bdqfork.core;
 
+
 import com.github.bdqfork.core.config.Configuration;
 
 import java.util.List;

@@ -9,9 +9,21 @@ import java.io.Serializable;
  * @since 2020/09/21
  */
 public class RedoLog implements Serializable {
+    /**
+     * 数据库id
+     */
     private Integer databaseId;
+    /**
+     * key
+     */
     private String key;
+    /**
+     * value
+     */
     private Object value;
+    /**
+     * 过期时间
+     */
     private Long expireAt;
 
     public void setDatabaseId(Integer databaseId) {
