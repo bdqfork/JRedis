@@ -1,5 +1,7 @@
 package com.github.bdqfork.core;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 /**
  * 对请求的命令进行封装
  *
@@ -7,6 +9,8 @@ package com.github.bdqfork.core;
  * @since 2020/9/20
  */
 public class Request {
+
+    private static final AtomicLong ID_GENERATOR = new AtomicLong(0);
     /**
      * 请求id
      */
@@ -20,7 +24,11 @@ public class Request {
      */
     private Object data;
 
-    public Request(Long requestId) {
+    public static Long newId() {
+        return ID_GENERATOR.getAndIncrement();
+    }
+
+    public void setRequestId(Long requestId) {
         this.requestId = requestId;
     }
 

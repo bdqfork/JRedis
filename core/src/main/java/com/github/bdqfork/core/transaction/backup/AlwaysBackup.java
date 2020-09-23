@@ -1,10 +1,13 @@
 package com.github.bdqfork.core.transaction.backup;
 
+import com.github.bdqfork.core.exception.FailedSerializeException;
 import com.github.bdqfork.core.transaction.TransactionLog;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -23,16 +26,26 @@ public class AlwaysBackup extends AbstractBackupStrategy {
     }
 
     @Override
-    protected void doBackup() throws IOException {
+    protected void doBackup() {
         File file = new File(getLogFilePath());
-        FileOutputStream fileOutputStream = new FileOutputStream(file, true);
-        Queue<TransactionLog> transactionLogs = getTransactionLogs();
-        while (!transactionLogs.isEmpty()) {
-            TransactionLog transactionLog = transactionLogs.poll();
-            fileOutputStream.write("begin".getBytes());
-            // todo: 序列化TransactionLog，求出size并写入磁盘，然后将二进制数据写入磁盘
+        FileOutputStream fileOutputStream;
+        try {
+            fileOutputStream = new FileOutputStream(file, true);
+            Queue<TransactionLog> transactionLogs = getTransactionLogs();
+            while (!transactionLogs.isEmpty()) {
+                TransactionLog transactionLog = transactionLogs.poll();
+
+                fileOutputStream.write("begin".getBytes(StandardCharsets.UTF_8));
+
+                byte[] data = getSerializer().serialize(transactionLog);
+                int size = data.length;
+                fileOutputStream.write(size);
+                fileOutputStream.write(data);
+            }
+            fileOutputStream.flush();
+            fileOutputStream.close();
+        } catch (FailedSerializeException | IOException e) {
+            throw new IllegalStateException(e);
         }
-        fileOutputStream.flush();
-        fileOutputStream.close();
     }
 }

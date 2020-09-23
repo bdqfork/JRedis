@@ -9,6 +9,10 @@ package com.github.bdqfork.core.config;
 public class Configuration {
     private Integer databaseNumber;
 
+    private String serializer;
+
+    private String backupStrategy;
+
     private String username;
 
     private String password;
@@ -19,6 +23,22 @@ public class Configuration {
 
     public void setDatabaseNumber(Integer databaseNumber) {
         this.databaseNumber = databaseNumber;
+    }
+
+    public String getSerializer() {
+        return serializer;
+    }
+
+    public void setSerializer(String serializer) {
+        this.serializer = serializer;
+    }
+
+    public String getBackupStrategy() {
+        return backupStrategy;
+    }
+
+    public void setBackupStrategy(String backupStrategy) {
+        this.backupStrategy = backupStrategy;
     }
 
     public String getUsername() {

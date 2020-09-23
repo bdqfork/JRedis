@@ -14,6 +14,10 @@ public class RedoLog implements Serializable {
      */
     private Integer databaseId;
     /**
+     * 数据类型
+     */
+    private byte dataType;
+    /**
      * key
      */
     private String key;
@@ -32,6 +36,14 @@ public class RedoLog implements Serializable {
 
     public Integer getDatabaseId() {
         return databaseId;
+    }
+
+    public byte getDataType() {
+        return dataType;
+    }
+
+    public void setDataType(byte dataType) {
+        this.dataType = dataType;
     }
 
     public String getKey() {

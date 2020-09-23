@@ -14,7 +14,7 @@ public class BackupStrategyFactory {
      * @param type 策略名
      * @return BackupStrategy 备份策略实例
      */
-    public BackupStrategy getBackupStrategy(String type) {
+    public static BackupStrategy getBackupStrategy(String type) {
         return new AlwaysBackup();
     }
 }

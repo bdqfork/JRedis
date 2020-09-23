@@ -1,5 +1,7 @@
 package com.github.bdqfork.core.transaction.backup;
 
+import com.github.bdqfork.core.serializtion.JdkSerializer;
+import com.github.bdqfork.core.serializtion.Serializer;
 import com.github.bdqfork.core.transaction.TransactionLog;
 
 import java.io.File;
@@ -14,8 +16,9 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public abstract class AbstractBackupStrategy implements BackupStrategy {
     private static final String DEFAULT_LOG_FILE_PATH = "./jredis.log";
-    private Lock lock = new ReentrantLock();
-    private String logFilePath;
+    private final Lock lock = new ReentrantLock();
+    private final String logFilePath;
+    private Serializer serializer = new JdkSerializer();
     /**
      * RedoLog buffer
      */
@@ -40,7 +43,7 @@ public abstract class AbstractBackupStrategy implements BackupStrategy {
 
 
     @Override
-    public void backup(TransactionLog transactionLog) throws IOException {
+    public void backup(TransactionLog transactionLog) {
         transactionLogs.offer(transactionLog);
         try {
             lock.lock();
@@ -48,6 +51,14 @@ public abstract class AbstractBackupStrategy implements BackupStrategy {
         } finally {
             lock.unlock();
         }
+    }
+
+    public void setSerializer(Serializer serializer) {
+        this.serializer = serializer;
+    }
+
+    protected Serializer getSerializer() {
+        return this.serializer;
     }
 
     protected String getLogFilePath() {
@@ -58,5 +69,5 @@ public abstract class AbstractBackupStrategy implements BackupStrategy {
         return transactionLogs;
     }
 
-    protected abstract void doBackup() throws IOException;
+    protected abstract void doBackup();
 }

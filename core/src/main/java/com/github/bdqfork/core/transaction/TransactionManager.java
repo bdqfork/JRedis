@@ -74,11 +74,7 @@ public class TransactionManager {
 
         }
 
-        try {
-            backup(transaction);
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
+        backup(transaction);
 
         return result;
     }
@@ -101,15 +97,11 @@ public class TransactionManager {
             transaction.addRedoLog(redoLog);
         }
 
-        try {
-            backup(transaction);
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
+        backup(transaction);
     }
 
 
-    private void backup(Transaction transaction) throws IOException {
+    private void backup(Transaction transaction) {
         TransactionLog transactionLog = new TransactionLog();
         transactionLog.setTransactionId(transaction.getTransactionId());
         transactionLog.setRedoLogs(transactionLog.getRedoLogs());

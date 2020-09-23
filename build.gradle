@@ -1,6 +1,8 @@
 ext {
     libraries = [
-            'netty' : '4.1.52.Final'
+            'netty'  : '4.1.52.Final',
+            'hessian': '4.0.63',
+            'slf4j'  : '1.7.30'
     ]
 }
 

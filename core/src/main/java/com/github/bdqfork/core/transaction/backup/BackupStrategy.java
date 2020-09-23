@@ -11,5 +11,5 @@ import java.io.IOException;
  * @since 2020/09/22
  */
 public interface BackupStrategy {
-    void backup(TransactionLog transactionLog) throws IOException;
+    void backup(TransactionLog transactionLog);
 }
