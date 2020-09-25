@@ -118,6 +118,7 @@ public class TransactionManager {
         undoLog.setDatabaseId(databaseId);
         undoLog.setKey(key);
         undoLog.setValue(value);
+        // todo:设置datatype
         undoLog.setExpireAt(expireAt);
 
         return undoLog;
@@ -133,6 +134,7 @@ public class TransactionManager {
         redoLog.setDatabaseId(databaseId);
         redoLog.setKey(key);
         redoLog.setValue(value);
+        // todo:设置datatype
         redoLog.setExpireAt(expireAt);
 
         return redoLog;
