@@ -10,8 +10,9 @@ public class RespUtilsTest {
 
     @Test
     public void parserArray() {
-        List<String> results = RespUtils.parserArray("*3\r\n+OK\r\n$3\r\nfoo\r\n$3\r\nbar\r\n");
-        assertArrayEquals(new String[]{"OK", "foo", "bar"}, results.toArray());
+        String commands = "*2\r\n*3\r\n:1\r\n:2\r\n:3\r\n*2\r\n+Foo\r\n-Bar\r\n";
+        List<Object> results = RespUtils.parserArray(commands);
+        results.forEach(System.out::println);
     }
 
 }
