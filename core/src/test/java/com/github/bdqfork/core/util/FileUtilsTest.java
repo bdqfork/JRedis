@@ -13,8 +13,8 @@ import java.util.Properties;
 public class FileUtilsTest {
 
     @Test
-    public void loadConfigurationTest() throws IOException {
-        Properties properties = FileUtils.loadConfiguration("jredis.conf");
+    public void loadPropertiesTest() throws IOException {
+        Properties properties = FileUtils.loadProperties("E:/jredis.conf");
         assert "16".equals(properties.getProperty("databaseNumber"));
     }
 }

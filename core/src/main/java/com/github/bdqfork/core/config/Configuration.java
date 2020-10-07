@@ -7,6 +7,11 @@ package com.github.bdqfork.core.config;
  * @since 2020/09/21
  */
 public class Configuration {
+    public static final String DEFAULT_CONFIG_FILE_PATH = "jredis.conf";
+    public static final Integer DEFAULT_CONFIG_DATABASES_NUMBER = 16;
+    public static final String DEFAULT_CONFIG_SERIALIZER = "jdk";
+    public static final String DEFAULT_CONFIG_BACKUP_STRATEGY = "aof";
+
     private Integer databaseNumber;
 
     private String serializer;

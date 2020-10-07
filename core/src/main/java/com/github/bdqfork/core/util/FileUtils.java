@@ -1,7 +1,6 @@
 package com.github.bdqfork.core.util;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.file.NoSuchFileException;
 import java.util.Properties;
 
@@ -14,13 +13,11 @@ import java.util.Properties;
 
 public class FileUtils {
 
-    public static Properties loadConfiguration(String filePath) throws IOException {
+    public static Properties loadProperties(String filePath) throws IOException {
+        InputStream inputStream = new FileInputStream(filePath);
         Properties properties = new Properties();
-        InputStream inputStream = FileUtils.class.getClassLoader().getResourceAsStream(filePath);
-        if (inputStream == null) {
-            throw new NoSuchFileException("Cannot find the file under \"" + filePath +"\"");
-        }
         properties.load(inputStream);
+        inputStream.close();
         return properties;
     }
 
