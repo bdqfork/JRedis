@@ -13,7 +13,7 @@ import java.util.Properties;
 
 public class FileUtils {
 
-    public static Properties loadProperties(String filePath) throws IOException {
+    public static Properties loadPropertiesFile(String filePath) throws IOException {
         InputStream inputStream = new FileInputStream(filePath);
         Properties properties = new Properties();
         properties.load(inputStream);

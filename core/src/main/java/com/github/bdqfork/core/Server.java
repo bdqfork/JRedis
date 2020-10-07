@@ -60,6 +60,7 @@ public class Server {
         try {
             bootstrap.bind(host, port).sync();
         } catch (InterruptedException e) {
+            log.warn(e.getMessage(), e);
             destroy();
         }
     }
@@ -71,7 +72,7 @@ public class Server {
         destroy();
     }
 
-    protected void destroy() {
+    private void destroy() {
         try {
             boss.shutdownGracefully().sync();
             worker.shutdownGracefully().sync();
@@ -86,16 +87,17 @@ public class Server {
      * @throws IOException 配置文件不存在时抛出
      */
     private void loadConfiguration(String profilePath) throws IOException {
-        Properties properties = FileUtils.loadProperties(profilePath);
+        Properties properties = FileUtils.loadPropertiesFile(profilePath);
         this.configuration = new Configuration();
 
-        Integer databaseNumber = Integer.parseInt(properties.getOrDefault("databaseNumber", Configuration.DEFAULT_CONFIG_DATABASES_NUMBER).toString());
+        Integer databaseNumber = Integer.valueOf(properties.getProperty(
+                "databaseNumber",Configuration.DEFAULT_CONFIG_DATABASES_NUMBER));
         configuration.setDatabaseNumber(databaseNumber);
 
-        String serializer = properties.getOrDefault("serializer", Configuration.DEFAULT_CONFIG_SERIALIZER).toString();
+        String serializer = properties.getProperty("serializer", Configuration.DEFAULT_CONFIG_SERIALIZER);
         configuration.setSerializer(serializer);
 
-        String backupStrategy = properties.getOrDefault("backupStrategy", Configuration.DEFAULT_CONFIG_BACKUP_STRATEGY).toString();
+        String backupStrategy = properties.getProperty("backupStrategy", Configuration.DEFAULT_CONFIG_BACKUP_STRATEGY);
         configuration.setBackupStrategy(backupStrategy);
 
         String username = properties.getProperty("username");
