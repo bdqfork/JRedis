@@ -14,7 +14,7 @@ public class FileUtilsTest {
 
     @Test
     public void loadPropertiesTest() throws IOException {
-        Properties properties = FileUtils.loadProperties("E:/jredis.conf");
+        Properties properties = FileUtils.loadPropertiesFile("E:/jredis.conf");
         assert "16".equals(properties.getProperty("databaseNumber"));
     }
 }
