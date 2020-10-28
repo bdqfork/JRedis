@@ -6,6 +6,7 @@ import com.github.bdqfork.core.handler.CommandInboundHandler;
 import com.github.bdqfork.core.handler.codec.ByteToStringDecoder;
 import com.github.bdqfork.core.handler.codec.RESPDecoder;
 import com.github.bdqfork.core.handler.codec.RESPEncoder;
+import com.github.bdqfork.core.handler.codec.StringToByteEncoder;
 import com.github.bdqfork.core.util.FileUtils;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelInitializer;
@@ -64,8 +65,8 @@ public class Server {
                     @Override
                     protected void initChannel(SocketChannel ch) throws Exception {
                         ch.pipeline().addLast(new ByteToStringDecoder())
+                                .addLast(new StringToByteEncoder())
                                 .addLast(new RESPDecoder())
-                                .addLast(new RESPEncoder())
                                 .addLast(new CommandInboundHandler());
                     }
                 });

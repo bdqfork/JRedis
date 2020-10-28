@@ -10,8 +10,20 @@ public class RespUtilsTest {
 
     @Test
     public void parserArray() {
-        String commands = "*2\r\n*3\r\n:1\r\n:2\r\n:3\r\n*2\r\n+Foo\r\n-Bar\r\n";
-        List<Object> results = RespUtils.parserArray(commands);
+        String commands = "*6\r\n" +
+                "$9\r\n" +
+                "sismember\r\n" +
+                ":3\r\n" +
+                "*2\r\n" +
+                "+readonly\r\n" +
+                "+fast\r\n" +
+                ":1\r\n" +
+                ":2\r\n" +
+                "*2\r\n" +
+                "$6\r\n" +
+                "msetnx\r\n" +
+                ":-3\r\n";
+        List<Object> results = (List<Object>) RespUtils.parserArray(commands).get("res");
         results.forEach(System.out::println);
     }
 
