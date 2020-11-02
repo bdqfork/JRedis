@@ -1,11 +1,17 @@
 package com.github.bdqfork.client;
 
+import com.github.bdqfork.client.handler.InputCommandHandler;
+import com.github.bdqfork.client.handler.codec.ByteToStringDecoder;
+import com.github.bdqfork.client.handler.codec.RESPDecoder;
+import com.github.bdqfork.client.handler.codec.RESPEncoder;
+import com.github.bdqfork.client.handler.codec.StringToByteEncoder;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioSocketChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,11 +35,16 @@ public class Client {
         group = new NioEventLoopGroup();
         Bootstrap bootstrap = new Bootstrap();
         bootstrap.group(group)
+                .channel(NioSocketChannel.class)
                 .option(ChannelOption.SO_KEEPALIVE,true)
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel ch) throws Exception {
-
+                        ch.pipeline().addLast(new ByteToStringDecoder())
+                                .addLast(new StringToByteEncoder())
+                                .addLast(new RESPDecoder())
+                                .addLast(new RESPEncoder())
+                                .addLast(new InputCommandHandler());
                     }
                 });
 

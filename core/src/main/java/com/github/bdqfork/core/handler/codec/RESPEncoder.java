@@ -13,10 +13,11 @@ import java.util.List;
  * @since 2020/10/22
  */
 
-public class RESPEncoder extends MessageToMessageEncoder<String[]> {
+public class RESPEncoder extends MessageToMessageEncoder<String> {
 
     @Override
-    protected void encode(ChannelHandlerContext ctx, String[] msg, List<Object> out) throws Exception {
-
+    protected void encode(ChannelHandlerContext ctx, String msg, List<Object> out) throws Exception {
+        //todo 编码
+        out.add(msg);
     }
 }
