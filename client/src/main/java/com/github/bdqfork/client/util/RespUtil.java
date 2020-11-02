@@ -6,6 +6,11 @@ package com.github.bdqfork.client.util;
  */
 
 public class RespUtil {
+    /**
+     * 将客户端输入命令封装成resp字符串数组
+     * @param command 用户输入
+     * @return resp字符串数组
+     */
     public static String parseString(String command) {
         String[] array = command.split(" ");
         StringBuilder result = new StringBuilder();
@@ -23,6 +28,11 @@ public class RespUtil {
         return result.toString();
     }
 
+    /**
+     * 将服务端响应解析为字符串，多条数据用"\r\n"分割
+     * @param resp resp数据
+     * @return 字符串
+     */
     public static String parseResponse(String resp) {
         StringBuilder result = new StringBuilder();
         char[] chs = resp.toCharArray();
