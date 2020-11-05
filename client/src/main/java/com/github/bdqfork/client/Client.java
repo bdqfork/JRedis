@@ -1,10 +1,8 @@
 package com.github.bdqfork.client;
 
 import com.github.bdqfork.client.handler.InputCommandHandler;
-import com.github.bdqfork.client.handler.codec.ByteToStringDecoder;
 import com.github.bdqfork.client.handler.codec.RESPDecoder;
 import com.github.bdqfork.client.handler.codec.RESPEncoder;
-import com.github.bdqfork.client.handler.codec.StringToByteEncoder;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
@@ -40,9 +38,7 @@ public class Client {
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel ch) throws Exception {
-                        ch.pipeline().addLast(new ByteToStringDecoder())
-                                .addLast(new StringToByteEncoder())
-                                .addLast(new RESPDecoder())
+                        ch.pipeline().addLast(new RESPDecoder())
                                 .addLast(new RESPEncoder())
                                 .addLast(new InputCommandHandler());
                     }
@@ -61,6 +57,7 @@ public class Client {
             group.shutdownGracefully().sync();
         } catch (InterruptedException e) {
             log.error(e.getMessage(), e);
+            throw new RuntimeException(e);
         }
     }
 }

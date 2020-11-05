@@ -6,7 +6,7 @@ import io.netty.handler.codec.MessageToByteEncoder;
 
 /**
  * @author Trey
- * @since 2020/10/27
+ * @since 2020/11/5
  */
 
 public class StringToByteEncoder extends MessageToByteEncoder<String> {

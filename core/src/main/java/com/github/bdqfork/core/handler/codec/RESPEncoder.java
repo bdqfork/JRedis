@@ -18,6 +18,6 @@ public class RESPEncoder extends MessageToMessageEncoder<String> {
     @Override
     protected void encode(ChannelHandlerContext ctx, String msg, List<Object> out) throws Exception {
         //todo 编码
-        out.add(msg);
+        out.add(msg.getBytes());
     }
 }

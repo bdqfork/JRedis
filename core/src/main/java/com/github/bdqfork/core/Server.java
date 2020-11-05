@@ -3,9 +3,7 @@ package com.github.bdqfork.core;
 
 import com.github.bdqfork.core.config.Configuration;
 import com.github.bdqfork.core.handler.CommandInboundHandler;
-import com.github.bdqfork.core.handler.codec.ByteToStringDecoder;
 import com.github.bdqfork.core.handler.codec.RESPDecoder;
-import com.github.bdqfork.core.handler.codec.RESPEncoder;
 import com.github.bdqfork.core.handler.codec.StringToByteEncoder;
 import com.github.bdqfork.core.util.FileUtils;
 import io.netty.bootstrap.ServerBootstrap;
@@ -64,8 +62,7 @@ public class Server {
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel ch) throws Exception {
-                        ch.pipeline().addLast(new ByteToStringDecoder())
-                                .addLast(new StringToByteEncoder())
+                        ch.pipeline().addLast(new StringToByteEncoder())
                                 .addLast(new RESPDecoder())
                                 .addLast(new CommandInboundHandler());
                     }
@@ -92,6 +89,7 @@ public class Server {
             worker.shutdownGracefully().sync();
         } catch (InterruptedException e) {
             log.error(e.getMessage(), e);
+            throw new RuntimeException(e);
         }
     }
 

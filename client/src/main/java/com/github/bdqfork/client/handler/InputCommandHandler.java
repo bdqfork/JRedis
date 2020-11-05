@@ -13,7 +13,7 @@ import java.util.Scanner;
 public class InputCommandHandler extends SimpleChannelInboundHandler<String> {
 
     @Override
-    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+    public void channelInactive(ChannelHandlerContext ctx) {
         System.out.println("connection dropped");
     }
 
