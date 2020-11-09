@@ -11,6 +11,8 @@ public class Configuration {
     public static final String DEFAULT_CONFIG_DATABASES_NUMBER = "16";
     public static final String DEFAULT_CONFIG_SERIALIZER = "jdk";
     public static final String DEFAULT_CONFIG_BACKUP_STRATEGY = "aof";
+    public static final String DEFAULT_CONFIG_HOST = "127.0.0.1";
+    public static final String DEFAULT_CONFIG_PORT = "7000";
 
     private String host;
 

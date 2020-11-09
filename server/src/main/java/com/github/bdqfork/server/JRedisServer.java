@@ -80,6 +80,13 @@ public class JRedisServer {
         Properties properties = FileUtils.loadPropertiesFile(profilePath);
         this.configuration = new Configuration();
 
+        String host = properties.getProperty("host", Configuration.DEFAULT_CONFIG_HOST);
+        configuration.setHost(host);
+
+        Integer port = Integer.valueOf(
+                properties.getProperty("port", Configuration.DEFAULT_CONFIG_PORT));
+        configuration.setPort(port);
+
         Integer databaseNumber = Integer.valueOf(properties.getProperty(
                 "databaseNumber", Configuration.DEFAULT_CONFIG_DATABASES_NUMBER));
         configuration.setDatabaseNumber(databaseNumber);
