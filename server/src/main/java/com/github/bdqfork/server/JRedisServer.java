@@ -59,8 +59,7 @@ public class JRedisServer {
 
         String host = configuration.getHost();
         Integer port = configuration.getPort();
-        Long timeout = configuration.getTimeout();
-        nettyServer = new NettyServer(host, port, timeout, dispatcher);
+        nettyServer = new NettyServer(host, port, dispatcher);
 
         nettyServer.start();
 

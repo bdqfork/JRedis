@@ -10,6 +10,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.string.StringEncoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,12 +28,10 @@ public class NettyServer {
     private EventLoopGroup boss;
     private EventLoopGroup worker;
     private Dispatcher dispatcher;
-    private long timeout;
 
-    public NettyServer(String host, Integer port, long timeout, Dispatcher dispatcher) {
+    public NettyServer(String host, Integer port, Dispatcher dispatcher) {
         this.host = host;
         this.port = port;
-        this.timeout = timeout;
         this.dispatcher = dispatcher;
     }
 
@@ -52,7 +51,8 @@ public class NettyServer {
                     protected void initChannel(SocketChannel ch) throws Exception {
                         ch.pipeline()
                                 .addLast(new MessageDecoder(MAX_CAPCITY))
-                                .addLast(new CommandHandler(timeout, dispatcher));
+                                .addLast(new CommandHandler(dispatcher))
+                                .addLast(new StringEncoder());
                     }
                 });
 
