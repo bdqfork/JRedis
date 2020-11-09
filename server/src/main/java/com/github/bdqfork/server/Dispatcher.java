@@ -24,15 +24,27 @@ public class Dispatcher {
     }
 
     public CommandFuture dispatch(CommandContext commandContext) {
+        try {
+            queue.put(commandContext);
+        } catch (InterruptedException e) {
+            throw new JRedisException(e);
+        }
         return commandContext.getResultFutrue();
     }
 
     public void accept() {
+        CountDownLatch startedLatch = new CountDownLatch(1);
         Thread handler = new Thread(new Runnable() {
             @Override
             public void run() {
+                startedLatch.countDown();
                 while (!destroyed) {
-                    CommandContext commandContext = queue.poll();
+                    CommandContext commandContext;
+                    try {
+                        commandContext = queue.take();
+                    } catch (InterruptedException e) {
+                        throw new JRedisException(e);
+                    }
                     handle(commandContext);
                 }
                 latch.countDown();
@@ -40,6 +52,11 @@ public class Dispatcher {
         });
         handler.setName("Main-Handler");
         handler.start();
+        try {
+            startedLatch.await();
+        } catch (InterruptedException e) {
+            throw new JRedisException(e);
+        }
     }
 
     private void handle(CommandContext commandContext) {
