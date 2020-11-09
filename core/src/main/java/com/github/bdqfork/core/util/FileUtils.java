@@ -1,7 +1,6 @@
 package com.github.bdqfork.core.util;
 
 import java.io.*;
-import java.nio.file.NoSuchFileException;
 import java.util.Properties;
 
 /**
