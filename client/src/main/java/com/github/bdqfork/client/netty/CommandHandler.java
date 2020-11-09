@@ -1,4 +1,4 @@
-package com.github.bdqfork.client.netty.handler;
+package com.github.bdqfork.client.netty;
 
 import com.github.bdqfork.core.CommandContext;
 import com.github.bdqfork.core.CommandFuture;
@@ -17,10 +17,10 @@ import java.util.concurrent.CompletableFuture;
  * @since 2020/10/31
  */
 
-public class InputCommandHandler extends SimpleChannelInboundHandler<Object> {
+public class CommandHandler extends SimpleChannelInboundHandler<Object> {
     private BlockingQueue<CommandContext> queue;
 
-    public InputCommandHandler(BlockingQueue<CommandContext> queue) {
+    public CommandHandler(BlockingQueue<CommandContext> queue) {
         this.queue = queue;
     }
 
@@ -32,7 +32,7 @@ public class InputCommandHandler extends SimpleChannelInboundHandler<Object> {
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
         EntryWrapper entryWrapper = (EntryWrapper) msg;
-        CommandContext commandContext = queue.poll();
+        CommandContext commandContext = queue.take();
         CommandFuture commandFuture = commandContext.getResultFutrue();
         commandFuture.complete(entryWrapper);
     }

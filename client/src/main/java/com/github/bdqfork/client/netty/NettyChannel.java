@@ -1,10 +1,7 @@
 package com.github.bdqfork.client.netty;
 
-import com.github.bdqfork.client.netty.handler.InputCommandHandler;
 import com.github.bdqfork.core.CommandContext;
-import com.github.bdqfork.core.CommandFuture;
 import com.github.bdqfork.core.MessageDecoder;
-import com.github.bdqfork.core.protocol.EntryWrapper;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
@@ -19,7 +16,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutionException;
 
 /**
  * @author Trey
@@ -52,7 +48,7 @@ public class NettyChannel {
                     protected void initChannel(SocketChannel ch) throws Exception {
                         ch.pipeline().addLast(new MessageDecoder(MAX_CAPCITY))
                                 .addLast(new StringEncoder())
-                                .addLast(new InputCommandHandler(queue));
+                                .addLast(new CommandHandler(queue));
                         if (channel.isActive()) {
                             channel.closeFuture().sync();
                         }

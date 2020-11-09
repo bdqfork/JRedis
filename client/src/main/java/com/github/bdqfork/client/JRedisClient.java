@@ -1,12 +1,17 @@
 package com.github.bdqfork.client;
 
 import com.github.bdqfork.client.netty.NettyChannel;
+import com.github.bdqfork.core.CommandContext;
+
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 /**
  * @author bdq
  * @since 2020/11/4
  */
 public class JRedisClient {
+    private final BlockingQueue<CommandContext> queue = new ArrayBlockingQueue<>(1024);
     private String host;
     private Integer port;
     private int datebaseId;
@@ -23,11 +28,11 @@ public class JRedisClient {
         nettyChannel.open();
     }
 
-    public StringCommand getStringCommand() {
-        return new StringCommand(datebaseId, nettyChannel);
+    public ValueOperations OpsForValue() {
+        return new ValueOperations(datebaseId, nettyChannel, queue);
     }
 
     public void close() {
-        nettyChannel.close();;
+        nettyChannel.close();
     }
 }
