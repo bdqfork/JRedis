@@ -51,8 +51,8 @@ public class NettyServer {
                     protected void initChannel(SocketChannel ch) throws Exception {
                         ch.pipeline()
                                 .addLast(new MessageDecoder(MAX_CAPCITY))
-                                .addLast(new CommandHandler(dispatcher))
-                                .addLast(new StringEncoder());
+                                .addLast(new StringEncoder())
+                                .addLast(new CommandHandler(dispatcher));
                     }
                 });
 

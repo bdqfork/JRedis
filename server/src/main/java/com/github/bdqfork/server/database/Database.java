@@ -53,6 +53,9 @@ public class Database {
      * @param key 键
      */
     public Object get(String key) {
+        if (!dictMap.containsKey(key)) {
+            return null;
+        }
         if (ttl(key) > 0) {
             return dictMap.get(key);
         } else {

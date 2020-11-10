@@ -24,7 +24,7 @@ public class JRedisClient {
     }
 
     public void connect() {
-        nettyChannel = new NettyChannel(host, port);
+        nettyChannel = new NettyChannel(host, port,queue);
         nettyChannel.open();
     }
 

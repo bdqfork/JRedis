@@ -29,11 +29,12 @@ public class NettyChannel {
     protected Integer port;
     private EventLoopGroup group;
     private Channel channel;
-    private BlockingQueue<CommandContext> queue = new ArrayBlockingQueue<>(1024);
+    private BlockingQueue<CommandContext> queue;
 
-    public NettyChannel(String host, Integer port) {
+    public NettyChannel(String host, Integer port,BlockingQueue<CommandContext> queue) {
         this.host = host;
         this.port = port;
+        this.queue = queue;
     }
 
 
@@ -46,10 +47,11 @@ public class NettyChannel {
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel ch) throws Exception {
-                        ch.pipeline().addLast(new MessageDecoder(MAX_CAPCITY))
+                        ch.pipeline()
+                                .addLast(new MessageDecoder(MAX_CAPCITY))
                                 .addLast(new StringEncoder())
                                 .addLast(new CommandHandler(queue));
-                        if (channel.isActive()) {
+                        if (channel != null && channel.isActive()) {
                             channel.closeFuture().sync();
                         }
                         channel = ch;

@@ -19,16 +19,25 @@ public class Application {
 //        String host = args[0];
 //        Integer port = Integer.parseInt(args[1]);
         JRedisClient jRedisClient = new JRedisClient("127.0.0.1", 7000, 0);
-//        jRedisClient.connect();
+        jRedisClient.connect();
         Scanner scanner = new Scanner(System.in);
         while (true) {
-            System.out.print(String.format(PREFIX_FORMAT, "127.0.0.1", 7000));
+            System.out.printf(PREFIX_FORMAT, "127.0.0.1", 7000);
             String line = scanner.nextLine();
             if ("exit".equals(line)) {
                 break;
             }
-            // todo: 解析并执行命令
-            System.out.println(String.format(PREFIX_FORMAT, "127.0.0.1", 7000) + "result");
+            // todo: 解析命令，这里只是简单例子，需要进行进一步封装
+            String[] lits = line.split(" ");
+            if ("get".equals(lits[0])) {
+                ValueOperations valueOperations = jRedisClient.OpsForValue();
+                Object value = valueOperations.get(lits[1]);
+                if (value == null) {
+                    System.out.println("nil");
+                } else {
+                    System.out.println(value);
+                }
+            }
         }
     }
 }

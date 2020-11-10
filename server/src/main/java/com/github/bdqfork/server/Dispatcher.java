@@ -2,7 +2,11 @@ package com.github.bdqfork.server;
 
 import com.github.bdqfork.core.CommandContext;
 import com.github.bdqfork.core.CommandFuture;
+import com.github.bdqfork.core.exception.FailedTransactionException;
 import com.github.bdqfork.core.exception.JRedisException;
+import com.github.bdqfork.core.protocol.EntryWrapper;
+import com.github.bdqfork.server.command.Command;
+import com.github.bdqfork.server.command.GetCommand;
 import com.github.bdqfork.server.transaction.TransactionManager;
 
 import java.util.concurrent.BlockingQueue;
@@ -24,6 +28,8 @@ public class Dispatcher {
     }
 
     public CommandFuture dispatch(CommandContext commandContext) {
+        CommandFuture commandFuture = new CommandFuture();
+        commandContext.setResultFutrue(commandFuture);
         try {
             queue.put(commandContext);
         } catch (InterruptedException e) {
@@ -60,12 +66,26 @@ public class Dispatcher {
     }
 
     private void handle(CommandContext commandContext) {
+        int databaseId = commandContext.getDatebaseId();
         String cmd = commandContext.getCmd();
         Object[] args = commandContext.getArgs();
+        Command command;
 
-        // todo: 执行命令
+        if ("get".equals(cmd)) {
+            command = new GetCommand((String) args[0]);
+        } else {
+            throw new JRedisException("Illegal command");
+        }
+
+        long transactionId = transactionManager.prepare(databaseId, command);
         CommandFuture commandFuture = commandContext.getResultFutrue();
-        commandFuture.complete("");
+        try {
+            EntryWrapper result = (EntryWrapper) transactionManager.commit(transactionId);
+            commandFuture.complete(result);
+        } catch (FailedTransactionException e) {
+            transactionManager.rollback(transactionId);
+            commandFuture.completeExceptionally(e);
+        }
     }
 
     public void stop() {

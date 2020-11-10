@@ -16,7 +16,7 @@ public class MessageDecoder extends LineBasedFrameDecoder {
     private StateMachine stateMachine;
 
     public MessageDecoder(int maxLength) {
-        super(maxLength, false, false);
+        super(maxLength);
         stateMachine = new StateMachine();
     }
 

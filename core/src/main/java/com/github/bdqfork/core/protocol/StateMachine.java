@@ -132,7 +132,8 @@ public class StateMachine {
     private Long readLong(ByteBuf byteBuf) {
         byte[] bytes = new byte[byteBuf.readableBytes()];
         byteBuf.readBytes(bytes);
-        return Long.parseLong(new String(bytes));
+        String num = new String(bytes);
+        return Long.parseLong(num);
     }
 
     private String readLine(ByteBuf byteBuf) {

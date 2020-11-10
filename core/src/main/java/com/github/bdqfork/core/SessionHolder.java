@@ -14,8 +14,8 @@ public class SessionHolder {
         return sessions.get(clientHost + ":" + clientPort);
     }
 
-    public static Session setSession(String clientHost, Integer clientPort, Session session) {
-        return sessions.put(clientHost + ":" + clientPort, session);
+    public static Session setSession(Session session) {
+        return sessions.put(session.getClientAddr() + ":" + session.getClientPort(), session);
     }
 
 }

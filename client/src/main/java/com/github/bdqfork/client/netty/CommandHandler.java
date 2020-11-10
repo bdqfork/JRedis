@@ -25,6 +25,11 @@ public class CommandHandler extends SimpleChannelInboundHandler<Object> {
     }
 
     @Override
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        System.out.println("connection is active");
+    }
+
+    @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         System.out.println("connection dropped");
     }
@@ -32,8 +37,10 @@ public class CommandHandler extends SimpleChannelInboundHandler<Object> {
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
         EntryWrapper entryWrapper = (EntryWrapper) msg;
-        CommandContext commandContext = queue.take();
-        CommandFuture commandFuture = commandContext.getResultFutrue();
-        commandFuture.complete(entryWrapper);
+        if (!queue.isEmpty()) {
+            CommandContext commandContext = queue.take();
+            CommandFuture commandFuture = commandContext.getResultFutrue();
+            commandFuture.complete(entryWrapper);
+        }
     }
 }

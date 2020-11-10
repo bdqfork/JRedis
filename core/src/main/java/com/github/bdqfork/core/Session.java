@@ -11,6 +11,12 @@ public class Session {
 
     private Integer databaseId;
 
+    public Session(String clientAddr, Integer clientPort, Integer databaseId) {
+        this.clientAddr = clientAddr;
+        this.clientPort = clientPort;
+        this.databaseId = databaseId;
+    }
+
     public String getClientAddr() {
         return clientAddr;
     }

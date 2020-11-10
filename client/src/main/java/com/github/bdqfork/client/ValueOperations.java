@@ -6,6 +6,8 @@ import com.github.bdqfork.core.CommandFuture;
 import com.github.bdqfork.core.exception.JRedisException;
 import com.github.bdqfork.core.protocol.EntryWrapper;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
 
@@ -25,9 +27,8 @@ class ValueOperations {
     }
 
     public Object get(String key) {
-        // todo: 构造命令
-        CommandContext commandContext = new CommandContext(datebaseId, "", null);
-        CommandFuture commandFuture = commandContext.getResultFutrue();
+        CommandContext commandContext = new CommandContext(datebaseId, "get", new Object[]{key});
+        CommandFuture commandFuture = new CommandFuture();
         commandContext.setResultFutrue(commandFuture);
 
         try {
@@ -42,13 +43,50 @@ class ValueOperations {
 
         try {
             EntryWrapper entryWrapper = (EntryWrapper) commandFuture.get();
-            return entryWrapper.toPlain();
+            return entryWrapper.getData();
         } catch (InterruptedException | ExecutionException e) {
             throw new JRedisException(e);
         }
     }
 
     private String encode(CommandContext commandContext) {
-        return null;
+        EntryWrapper entryWrapper = encodeArgs(commandContext.getArgs());
+        List<EntryWrapper> entryWrappers = entryWrapper.getData();
+
+        EntryWrapper cmdEntryWrapper = EntryWrapper.singleWrapper();
+        cmdEntryWrapper.setData(commandContext.getCmd());
+
+        entryWrappers.add(0, cmdEntryWrapper);
+        return entryWrapper.encode();
     }
+
+    private EntryWrapper encodeArgs(Object[] args) {
+        List<EntryWrapper> entryWrappers = new ArrayList<>();
+
+        for (Object arg : args) {
+            if (arg instanceof String) {
+                EntryWrapper singleWrapper = EntryWrapper.singleWrapper();
+                singleWrapper.setData(arg);
+                entryWrappers.add(singleWrapper);
+            }
+            if (arg instanceof Number) {
+                EntryWrapper integerWrapper = EntryWrapper.integerWrapper();
+                integerWrapper.setData(arg);
+                entryWrappers.add(integerWrapper);
+            }
+            if (arg instanceof byte[]) {
+                EntryWrapper bulkWrapper = EntryWrapper.bulkWrapper();
+                bulkWrapper.setData(arg);
+                entryWrappers.add(bulkWrapper);
+            }
+            if (arg instanceof List) {
+                List<?> items = (List<?>) arg;
+                entryWrappers.add(encodeArgs(items.toArray()));
+            }
+        }
+        EntryWrapper wrapper = EntryWrapper.multiWrapper();
+        wrapper.setData(entryWrappers);
+        return wrapper;
+    }
+
 }

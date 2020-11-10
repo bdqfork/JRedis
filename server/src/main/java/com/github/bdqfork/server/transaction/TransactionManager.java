@@ -38,7 +38,7 @@ public class TransactionManager {
      * 准备事务
      *
      * @param databaseId 数据库id
-     * @param command   命令
+     * @param command    命令
      */
     public Long prepare(int databaseId, Command command) {
         Long transactionId = newId();
@@ -59,7 +59,7 @@ public class TransactionManager {
         int databaseId = transaction.getDatabaseId();
         Command command = transaction.getCommand();
 
-        if (command instanceof UpdateCommand){
+        if (command instanceof UpdateCommand) {
             UpdateCommand updateOperation = (UpdateCommand) command;
             String key = updateOperation.getKey();
 
@@ -71,9 +71,11 @@ public class TransactionManager {
 
             RedoLog redoLog = createRedoLog(databaseId, updateOperation.getKey());
             transaction.addRedoLog(redoLog);
-        }
 
-        backup(transaction);
+            backup(transaction);
+        } else {
+            result = command.execute(databases.get(databaseId));
+        }
 
         return result;
     }

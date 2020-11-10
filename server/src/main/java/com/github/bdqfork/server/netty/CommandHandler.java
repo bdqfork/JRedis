@@ -15,6 +15,7 @@ import java.net.Inet4Address;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -39,19 +40,31 @@ public class CommandHandler extends SimpleChannelInboundHandler<Object> {
         SocketAddress socketAddress = ctx.channel().remoteAddress();
         CommandContext context = parse((InetSocketAddress) socketAddress, entryWrapper);
         CommandFuture future = dispatcher.dispatch(context);
-        EntryWrapper result = (EntryWrapper) future.get();
-        byte[] resp = result.encode().getBytes();
-        ctx.writeAndFlush(resp);
+        EntryWrapper result;
+        try {
+            result = (EntryWrapper) future.get();
+        } catch (ExecutionException e) {
+            result = EntryWrapper.errorWrapper();
+            result.setData("Failed to excution");
+        }
+        ctx.writeAndFlush(result.encode());
     }
 
     private CommandContext parse(InetSocketAddress socketAddress, EntryWrapper command) {
-        Session session = SessionHolder.getSession(socketAddress.getHostName(),socketAddress.getPort());
-        // todo: 解析cmd和args
-        return null;
+        List<EntryWrapper> entryWrappers = command.getData();
+        String cmd = entryWrappers.get(0).getData();
+        Object[] args = entryWrappers.stream().skip(1).map(EntryWrapper::getData).toArray();
+        Session session = SessionHolder.getSession(socketAddress.getHostName(), socketAddress.getPort());
+        return new CommandContext(session.getDatabaseId(), cmd, args);
     }
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        InetSocketAddress socketAddress = (InetSocketAddress) ctx.channel().remoteAddress();
+        Session session = new Session(socketAddress.getHostName(), socketAddress.getPort(), 0);
+
+        SessionHolder.setSession(session);
+
         EntryWrapper entryWrapper = EntryWrapper.singleWrapper();
         entryWrapper.setData("Connect Ok!");
         ctx.writeAndFlush(entryWrapper.encode());
