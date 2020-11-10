@@ -1,6 +1,6 @@
 package com.github.bdqfork.server.transaction;
 
-import com.github.bdqfork.server.command.Command;
+import com.github.bdqfork.server.command.Operation;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -13,14 +13,14 @@ import java.util.List;
 public class Transaction {
     private final Long transactionId;
     private final Integer databaseId;
-    private final Command command;
+    private final Operation operation;
     private final List<RedoLog> redoLogs = new ArrayList<>();
     private final List<UndoLog> undoLogs = new LinkedList<>();
 
-    public Transaction(Long transactionId, Integer databaseId, Command command) {
+    public Transaction(Long transactionId, Integer databaseId, Operation operation) {
         this.transactionId = transactionId;
         this.databaseId = databaseId;
-        this.command = command;
+        this.operation = operation;
     }
 
     public Long getTransactionId() {
@@ -31,8 +31,8 @@ public class Transaction {
         return databaseId;
     }
 
-    public Command getCommand() {
-        return command;
+    public Operation getCommand() {
+        return operation;
     }
 
     public List<RedoLog> getRedoLogs() {

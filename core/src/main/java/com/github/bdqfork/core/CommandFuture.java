@@ -8,5 +8,4 @@ import java.util.concurrent.CompletableFuture;
  */
 public class CommandFuture extends CompletableFuture<Object> {
 
-
 }

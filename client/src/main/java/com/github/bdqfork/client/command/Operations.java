@@ -1,55 +1,29 @@
-package com.github.bdqfork.client;
+package com.github.bdqfork.client.command;
 
 import com.github.bdqfork.client.netty.NettyChannel;
 import com.github.bdqfork.core.CommandContext;
-import com.github.bdqfork.core.CommandFuture;
-import com.github.bdqfork.core.exception.JRedisException;
 import com.github.bdqfork.core.protocol.EntryWrapper;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutionException;
 
 /**
  * @author bdq
- * @since 2020/11/9
+ * @since 2020/11/10
  */
-class ValueOperations {
-    private int datebaseId;
-    private NettyChannel nettyChannel;
-    private BlockingQueue<CommandContext> queue;
+public class Operations {
+    protected int datebaseId;
+    protected NettyChannel nettyChannel;
+    protected BlockingQueue<CommandContext> queue;
 
-    public ValueOperations(int datebaseId, NettyChannel nettyChannel, BlockingQueue<CommandContext> queue) {
+    public Operations(int datebaseId, NettyChannel nettyChannel, BlockingQueue<CommandContext> queue) {
         this.datebaseId = datebaseId;
         this.nettyChannel = nettyChannel;
         this.queue = queue;
     }
 
-    public Object get(String key) {
-        CommandContext commandContext = new CommandContext(datebaseId, "get", new Object[]{key});
-        CommandFuture commandFuture = new CommandFuture();
-        commandContext.setResultFutrue(commandFuture);
-
-        try {
-            queue.put(commandContext);
-        } catch (InterruptedException e) {
-            throw new JRedisException(e);
-        }
-
-        String cmd = encode(commandContext);
-
-        nettyChannel.send(cmd);
-
-        try {
-            EntryWrapper entryWrapper = (EntryWrapper) commandFuture.get();
-            return entryWrapper.getData();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new JRedisException(e);
-        }
-    }
-
-    private String encode(CommandContext commandContext) {
+    protected String encode(CommandContext commandContext) {
         EntryWrapper entryWrapper = encodeArgs(commandContext.getArgs());
         List<EntryWrapper> entryWrappers = entryWrapper.getData();
 
@@ -88,5 +62,4 @@ class ValueOperations {
         wrapper.setData(entryWrappers);
         return wrapper;
     }
-
 }

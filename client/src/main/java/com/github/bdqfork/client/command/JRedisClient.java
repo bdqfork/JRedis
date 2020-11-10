@@ -1,5 +1,6 @@
-package com.github.bdqfork.client;
+package com.github.bdqfork.client.command;
 
+import com.github.bdqfork.client.command.ValueOperations;
 import com.github.bdqfork.client.netty.NettyChannel;
 import com.github.bdqfork.core.CommandContext;
 
@@ -24,7 +25,7 @@ public class JRedisClient {
     }
 
     public void connect() {
-        nettyChannel = new NettyChannel(host, port,queue);
+        nettyChannel = new NettyChannel(host, port, queue);
         nettyChannel.open();
     }
 

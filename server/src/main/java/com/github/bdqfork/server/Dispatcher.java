@@ -5,8 +5,8 @@ import com.github.bdqfork.core.CommandFuture;
 import com.github.bdqfork.core.exception.FailedTransactionException;
 import com.github.bdqfork.core.exception.JRedisException;
 import com.github.bdqfork.core.protocol.EntryWrapper;
-import com.github.bdqfork.server.command.Command;
-import com.github.bdqfork.server.command.GetCommand;
+import com.github.bdqfork.server.command.GetOperation;
+import com.github.bdqfork.server.command.Operation;
 import com.github.bdqfork.server.transaction.TransactionManager;
 
 import java.util.concurrent.BlockingQueue;
@@ -69,15 +69,15 @@ public class Dispatcher {
         int databaseId = commandContext.getDatebaseId();
         String cmd = commandContext.getCmd();
         Object[] args = commandContext.getArgs();
-        Command command;
+        Operation operation;
 
         if ("get".equals(cmd)) {
-            command = new GetCommand((String) args[0]);
+            operation = new GetOperation((String) args[0]);
         } else {
             throw new JRedisException("Illegal command");
         }
 
-        long transactionId = transactionManager.prepare(databaseId, command);
+        long transactionId = transactionManager.prepare(databaseId, operation);
         CommandFuture commandFuture = commandContext.getResultFutrue();
         try {
             EntryWrapper result = (EntryWrapper) transactionManager.commit(transactionId);

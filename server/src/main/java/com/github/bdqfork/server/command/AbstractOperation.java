@@ -8,22 +8,18 @@ import java.util.stream.Collectors;
 
 /**
  * @author bdq
- * @since 2020/11/6
+ * @since 2020/11/10
  */
-public class GetCommand implements Command {
-    private final String key;
-
-    public GetCommand(String key) {
-        this.key = key;
-    }
-
+public abstract class AbstractOperation implements Operation {
     @Override
-    public Object execute(Database database) {
-        Object result = database.get(key);
+    public EntryWrapper execute(Database database) {
+        Object result = doExecute(database);
         return encodeResult(result);
     }
 
-    private EntryWrapper encodeResult(Object result) {
+    protected abstract Object doExecute(Database database);
+
+    protected EntryWrapper encodeResult(Object result) {
         EntryWrapper entryWrapper = null;
         if (result instanceof String) {
             entryWrapper = EntryWrapper.singleWrapper();
