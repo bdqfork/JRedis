@@ -5,8 +5,8 @@ import com.github.bdqfork.core.CommandFuture;
 import com.github.bdqfork.core.exception.FailedTransactionException;
 import com.github.bdqfork.core.exception.JRedisException;
 import com.github.bdqfork.core.protocol.EntryWrapper;
-import com.github.bdqfork.server.command.GetOperation;
-import com.github.bdqfork.server.command.Operation;
+import com.github.bdqfork.server.ops.GetOperation;
+import com.github.bdqfork.server.ops.Operation;
 import com.github.bdqfork.server.transaction.TransactionManager;
 
 import java.util.concurrent.BlockingQueue;

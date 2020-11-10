@@ -1,8 +1,8 @@
 package com.github.bdqfork.server.transaction;
 
 import com.github.bdqfork.core.exception.FailedTransactionException;
-import com.github.bdqfork.server.command.Operation;
-import com.github.bdqfork.server.command.UpdateOperation;
+import com.github.bdqfork.server.ops.Operation;
+import com.github.bdqfork.server.ops.UpdateOperation;
 import com.github.bdqfork.server.database.Database;
 import com.github.bdqfork.server.transaction.backup.BackupStrategy;
 

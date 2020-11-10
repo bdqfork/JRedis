@@ -1,6 +1,6 @@
 package com.github.bdqfork.server.transaction;
 
-import com.github.bdqfork.server.command.Operation;
+import com.github.bdqfork.server.ops.Operation;
 
 import java.util.ArrayList;
 import java.util.LinkedList;

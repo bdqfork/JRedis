@@ -1,4 +1,4 @@
-package com.github.bdqfork.server.command;
+package com.github.bdqfork.server.ops;
 
 /**
  * @author bdq
