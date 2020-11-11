@@ -1,16 +1,12 @@
 package com.github.bdqfork.client.netty;
 
-import com.github.bdqfork.core.CommandContext;
+import com.github.bdqfork.core.operation.OperationContext;
 import com.github.bdqfork.core.CommandFuture;
-import com.github.bdqfork.core.protocol.EntryWrapper;
-import com.github.bdqfork.core.protocol.StateMachine;
+import com.github.bdqfork.core.protocol.LiteralWrapper;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.handler.codec.LineBasedFrameDecoder;
 
-import java.util.Scanner;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * @author Trey
@@ -18,9 +14,9 @@ import java.util.concurrent.CompletableFuture;
  */
 
 public class CommandHandler extends SimpleChannelInboundHandler<Object> {
-    private BlockingQueue<CommandContext> queue;
+    private BlockingQueue<OperationContext> queue;
 
-    public CommandHandler(BlockingQueue<CommandContext> queue) {
+    public CommandHandler(BlockingQueue<OperationContext> queue) {
         this.queue = queue;
     }
 
@@ -36,11 +32,11 @@ public class CommandHandler extends SimpleChannelInboundHandler<Object> {
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
-        EntryWrapper entryWrapper = (EntryWrapper) msg;
+        LiteralWrapper literalWrapper = (LiteralWrapper) msg;
         if (!queue.isEmpty()) {
-            CommandContext commandContext = queue.take();
-            CommandFuture commandFuture = commandContext.getResultFutrue();
-            commandFuture.complete(entryWrapper);
+            OperationContext operationContext = queue.take();
+            CommandFuture commandFuture = operationContext.getResultFutrue();
+            commandFuture.complete(literalWrapper);
         }
     }
 }

@@ -20,4 +20,14 @@ public class FileUtils {
         return properties;
     }
 
+    /**
+     * 获取统一的路径，过滤windows上的路径分隔符
+     *
+     * @param file 文件
+     * @return 文件路径
+     */
+    public static String getUniformAbsolutePath(File file) {
+        return file.getAbsolutePath().replaceAll("\\\\", "\\/");
+    }
+
 }

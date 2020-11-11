@@ -1,6 +1,6 @@
 package com.github.bdqfork.client.netty;
 
-import com.github.bdqfork.core.CommandContext;
+import com.github.bdqfork.core.operation.OperationContext;
 import com.github.bdqfork.core.MessageDecoder;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
@@ -14,7 +14,6 @@ import io.netty.handler.codec.string.StringEncoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
 /**
@@ -29,9 +28,9 @@ public class NettyChannel {
     protected Integer port;
     private EventLoopGroup group;
     private Channel channel;
-    private BlockingQueue<CommandContext> queue;
+    private BlockingQueue<OperationContext> queue;
 
-    public NettyChannel(String host, Integer port,BlockingQueue<CommandContext> queue) {
+    public NettyChannel(String host, Integer port,BlockingQueue<OperationContext> queue) {
         this.host = host;
         this.port = port;
         this.queue = queue;

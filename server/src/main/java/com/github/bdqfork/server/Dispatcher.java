@@ -1,15 +1,15 @@
 package com.github.bdqfork.server;
 
-import com.github.bdqfork.core.CommandContext;
+import com.github.bdqfork.core.operation.OperationContext;
 import com.github.bdqfork.core.CommandFuture;
-import com.github.bdqfork.core.exception.FailedTransactionException;
 import com.github.bdqfork.core.exception.JRedisException;
-import com.github.bdqfork.core.protocol.EntryWrapper;
-import com.github.bdqfork.server.ops.GetOperation;
-import com.github.bdqfork.server.ops.Operation;
+import com.github.bdqfork.core.protocol.LiteralWrapper;
+import com.github.bdqfork.server.ops.GenericServerOperation;
 import com.github.bdqfork.server.transaction.TransactionManager;
 
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 
 /**
@@ -19,23 +19,24 @@ import java.util.concurrent.CountDownLatch;
 public class Dispatcher {
     private CountDownLatch latch = new CountDownLatch(1);
     private volatile boolean destroyed;
-    private BlockingQueue<CommandContext> queue;
+    private BlockingQueue<OperationContext> queue;
     private TransactionManager transactionManager;
+    private Map<Integer, GenericServerOperation> serverOperations = new ConcurrentHashMap<>();
 
-    public Dispatcher(TransactionManager transactionManager, BlockingQueue<CommandContext> queue) {
+    public Dispatcher(TransactionManager transactionManager, BlockingQueue<OperationContext> queue) {
         this.transactionManager = transactionManager;
         this.queue = queue;
     }
 
-    public CommandFuture dispatch(CommandContext commandContext) {
+    public CommandFuture dispatch(OperationContext operationContext) {
         CommandFuture commandFuture = new CommandFuture();
-        commandContext.setResultFutrue(commandFuture);
+        operationContext.setResultFutrue(commandFuture);
         try {
-            queue.put(commandContext);
+            queue.put(operationContext);
         } catch (InterruptedException e) {
             throw new JRedisException(e);
         }
-        return commandContext.getResultFutrue();
+        return operationContext.getResultFutrue();
     }
 
     public void accept() {
@@ -45,13 +46,13 @@ public class Dispatcher {
             public void run() {
                 startedLatch.countDown();
                 while (!destroyed) {
-                    CommandContext commandContext;
+                    OperationContext operationContext;
                     try {
-                        commandContext = queue.take();
+                        operationContext = queue.take();
                     } catch (InterruptedException e) {
                         throw new JRedisException(e);
                     }
-                    handle(commandContext);
+                    handle(operationContext);
                 }
                 latch.countDown();
             }
@@ -65,27 +66,33 @@ public class Dispatcher {
         }
     }
 
-    private void handle(CommandContext commandContext) {
-        int databaseId = commandContext.getDatebaseId();
-        String cmd = commandContext.getCmd();
-        Object[] args = commandContext.getArgs();
-        Operation operation;
+    private void handle(OperationContext operationContext) {
+        int databaseId = operationContext.getDatebaseId();
 
-        if ("get".equals(cmd)) {
-            operation = new GetOperation((String) args[0]);
-        } else {
-            throw new JRedisException("Illegal command");
-        }
+        GenericServerOperation genericServerOperation = getGenericServerOperation(databaseId);
 
-        long transactionId = transactionManager.prepare(databaseId, operation);
-        CommandFuture commandFuture = commandContext.getResultFutrue();
+        String cmd = operationContext.getCmd();
+        Object[] args = operationContext.getArgs();
+
+        CommandFuture commandFuture = operationContext.getResultFutrue();
         try {
-            EntryWrapper result = (EntryWrapper) transactionManager.commit(transactionId);
-            commandFuture.complete(result);
-        } catch (FailedTransactionException e) {
-            transactionManager.rollback(transactionId);
+            LiteralWrapper literalWrapper = genericServerOperation.execute(cmd, args);
+            commandFuture.complete(literalWrapper);
+        } catch (JRedisException e) {
             commandFuture.completeExceptionally(e);
         }
+
+    }
+
+    private GenericServerOperation getGenericServerOperation(int databaseId) {
+        GenericServerOperation genericServerOperation;
+        if (serverOperations.containsKey(databaseId)) {
+            genericServerOperation = serverOperations.get(databaseId);
+        } else {
+            genericServerOperation = new GenericServerOperation(databaseId, transactionManager);
+            serverOperations.put(databaseId, genericServerOperation);
+        }
+        return genericServerOperation;
     }
 
     public void stop() {

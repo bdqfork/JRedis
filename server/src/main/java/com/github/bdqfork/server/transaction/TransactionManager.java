@@ -1,8 +1,8 @@
 package com.github.bdqfork.server.transaction;
 
 import com.github.bdqfork.core.exception.FailedTransactionException;
-import com.github.bdqfork.server.ops.Operation;
-import com.github.bdqfork.server.ops.UpdateOperation;
+import com.github.bdqfork.server.ops.Command;
+import com.github.bdqfork.server.ops.UpdateCommand;
 import com.github.bdqfork.server.database.Database;
 import com.github.bdqfork.server.transaction.backup.BackupStrategy;
 
@@ -38,11 +38,11 @@ public class TransactionManager {
      * 准备事务
      *
      * @param databaseId 数据库id
-     * @param operation    命令
+     * @param command    命令
      */
-    public Long prepare(int databaseId, Operation operation) {
+    public Long prepare(int databaseId, Command command) {
         Long transactionId = newId();
-        Transaction transaction = new Transaction(transactionId, databaseId, operation);
+        Transaction transaction = new Transaction(transactionId, databaseId, command);
         transactionMap.put(transactionId, transaction);
         return transactionId;
     }
@@ -57,24 +57,24 @@ public class TransactionManager {
 
         Transaction transaction = transactionMap.get(transactionId);
         int databaseId = transaction.getDatabaseId();
-        Operation operation = transaction.getCommand();
+        Command command = transaction.getCommand();
 
-        if (operation instanceof UpdateOperation) {
-            UpdateOperation updateOperation = (UpdateOperation) operation;
+        if (command instanceof UpdateCommand) {
+            UpdateCommand updateOperation = (UpdateCommand) command;
             String key = updateOperation.getKey();
 
             UndoLog undoLog = createUndoLog(databaseId, key);
 
             transaction.addUndoLog(undoLog);
 
-            result = operation.execute(databases.get(databaseId));
+            result = command.execute(databases.get(databaseId));
 
             RedoLog redoLog = createRedoLog(databaseId, updateOperation.getKey());
             transaction.addRedoLog(redoLog);
 
             backup(transaction);
         } else {
-            result = operation.execute(databases.get(databaseId));
+            result = command.execute(databases.get(databaseId));
         }
 
         return result;

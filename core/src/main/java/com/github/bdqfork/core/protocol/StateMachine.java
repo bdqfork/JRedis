@@ -2,11 +2,8 @@ package com.github.bdqfork.core.protocol;
 
 import com.github.bdqfork.core.exception.JRedisException;
 import io.netty.buffer.ByteBuf;
-import io.netty.util.ReferenceCountUtil;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Stack;
 
@@ -21,11 +18,11 @@ public class StateMachine {
         this.stack = new Stack<>();
     }
 
-    public EntryWrapper decode(ByteBuf byteBuf) {
+    public LiteralWrapper decode(ByteBuf byteBuf) {
         if (stack.isEmpty()) {
             stack.push(new State());
         }
-        EntryWrapper latestEntryWrapper = null;
+        LiteralWrapper latestLiteralWrapper = null;
         while (!stack.isEmpty()) {
             State state = stack.peek();
             if (state.type == null) {
@@ -38,28 +35,28 @@ public class StateMachine {
             if (state.type == Type.SINGLE) {
                 state.wrapper.setData(readLine(byteBuf));
                 stack.pop();
-                latestEntryWrapper = state.wrapper;
+                latestLiteralWrapper = state.wrapper;
             }
             if (state.type == Type.ERROR) {
                 state.wrapper.setData(readLine(byteBuf));
                 stack.pop();
-                latestEntryWrapper = state.wrapper;
+                latestLiteralWrapper = state.wrapper;
             }
             if (state.type == Type.INTEGER) {
                 state.wrapper.setData(readLong(byteBuf));
                 stack.pop();
-                latestEntryWrapper = state.wrapper;
+                latestLiteralWrapper = state.wrapper;
             }
             if (state.type == Type.BYTES) {
                 state.wrapper.setData(readBytes(byteBuf));
                 stack.pop();
-                latestEntryWrapper = state.wrapper;
+                latestLiteralWrapper = state.wrapper;
             }
             if (state.type == Type.BULK) {
                 state.count = readLong(byteBuf);
                 if (state.count == -1) {
                     stack.pop();
-                    latestEntryWrapper = state.wrapper;
+                    latestLiteralWrapper = state.wrapper;
                 } else {
                     state.type = Type.BYTES;
                     break;
@@ -68,25 +65,25 @@ public class StateMachine {
             if (state.type == Type.MULTI) {
                 if (state.count == -1) {
                     stack.pop();
-                    latestEntryWrapper = state.wrapper;
+                    latestLiteralWrapper = state.wrapper;
                 } else if (state.count == Long.MIN_VALUE) {
                     state.count = readLong(byteBuf);
-                    state.wrapper = EntryWrapper.multiWrapper();
+                    state.wrapper = LiteralWrapper.multiWrapper();
                     if (state.count >= 0) {
-                        List<EntryWrapper> entryWrappers = new ArrayList<>((int) state.count);
-                        state.wrapper.setData(entryWrappers);
+                        List<LiteralWrapper> literalWrappers = new ArrayList<>((int) state.count);
+                        state.wrapper.setData(literalWrappers);
                     }
                 } else if (state.count == 0) {
                     stack.pop();
-                    if (latestEntryWrapper != null) {
-                        List<EntryWrapper> entryWrappers = state.wrapper.getData();
-                        entryWrappers.add(latestEntryWrapper);
+                    if (latestLiteralWrapper != null) {
+                        List<LiteralWrapper> literalWrappers = state.wrapper.getData();
+                        literalWrappers.add(latestLiteralWrapper);
                     }
-                    latestEntryWrapper = state.wrapper;
+                    latestLiteralWrapper = state.wrapper;
                 } else {
-                    if (latestEntryWrapper != null) {
-                        List<EntryWrapper> entryWrappers = state.wrapper.getData();
-                        entryWrappers.add(latestEntryWrapper);
+                    if (latestLiteralWrapper != null) {
+                        List<LiteralWrapper> literalWrappers = state.wrapper.getData();
+                        literalWrappers.add(latestLiteralWrapper);
                     }
                     stack.push(new State());
                     state.count--;
@@ -107,18 +104,18 @@ public class StateMachine {
         return data;
     }
 
-    private EntryWrapper getWrapper(Type type) {
+    private LiteralWrapper getWrapper(Type type) {
         switch (type) {
             case SINGLE:
-                return EntryWrapper.singleWrapper();
+                return LiteralWrapper.singleWrapper();
             case ERROR:
-                return EntryWrapper.errorWrapper();
+                return LiteralWrapper.errorWrapper();
             case INTEGER:
-                return EntryWrapper.integerWrapper();
+                return LiteralWrapper.integerWrapper();
             case BULK:
-                return EntryWrapper.bulkWrapper();
+                return LiteralWrapper.bulkWrapper();
             case MULTI:
-                return EntryWrapper.multiWrapper();
+                return LiteralWrapper.multiWrapper();
             default:
                 throw new JRedisException("Not support type");
         }
@@ -162,7 +159,7 @@ public class StateMachine {
     private static class State {
         Type type;
         long count = Long.MIN_VALUE;
-        EntryWrapper wrapper;
+        LiteralWrapper wrapper;
     }
 
 }

@@ -1,6 +1,6 @@
 package com.github.bdqfork.client;
 
-import com.github.bdqfork.client.gui.CommandLineCli;
+import com.github.bdqfork.client.gui.CommandLineClient;
 
 /**
  * 主启动类
@@ -21,7 +21,7 @@ public class Application {
             host = args[0];
             port = Integer.parseInt(args[1]);
         }
-        CommandLineCli commandLineCli = new CommandLineCli();
-        commandLineCli.run(host, port, 0);
+        CommandLineClient commandLineClient = new CommandLineClient(host, port);
+        commandLineClient.run();
     }
 }

@@ -1,6 +1,6 @@
 package com.github.bdqfork.server;
 
-import com.github.bdqfork.core.CommandContext;
+import com.github.bdqfork.core.operation.OperationContext;
 import com.github.bdqfork.core.exception.JRedisException;
 import com.github.bdqfork.core.util.FileUtils;
 import com.github.bdqfork.server.config.Configuration;
@@ -26,7 +26,7 @@ import java.util.concurrent.BlockingQueue;
 public class JRedisServer {
     private static final Logger log = LoggerFactory.getLogger(JRedisServer.class);
     private static final int DEFAULT_QUEUE_SIZE = 1024;
-    private final BlockingQueue<CommandContext> queue = new ArrayBlockingQueue<>(DEFAULT_QUEUE_SIZE);
+    private final BlockingQueue<OperationContext> queue = new ArrayBlockingQueue<>(DEFAULT_QUEUE_SIZE);
 
     private NettyServer nettyServer;
     private Configuration configuration;

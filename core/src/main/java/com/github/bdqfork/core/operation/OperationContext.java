@@ -1,16 +1,18 @@
-package com.github.bdqfork.core;
+package com.github.bdqfork.core.operation;
+
+import com.github.bdqfork.core.CommandFuture;
 
 /**
  * @author bdq
  * @since 2020/11/9
  */
-public class CommandContext {
+public class OperationContext {
     private int datebaseId;
     private String cmd;
     private Object[] args;
     private CommandFuture resultFutrue;
 
-    public CommandContext(int datebaseId, String cmd, Object[] args) {
+    public OperationContext(int datebaseId, String cmd, Object[] args) {
         this.datebaseId = datebaseId;
         this.cmd = cmd;
         this.args = args;
