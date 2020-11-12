@@ -5,6 +5,8 @@ import com.github.bdqfork.core.CommandFuture;
 import com.github.bdqfork.core.exception.JRedisException;
 import com.github.bdqfork.core.operation.OperationContext;
 import com.github.bdqfork.core.protocol.LiteralWrapper;
+import com.github.bdqfork.core.serializtion.JdkSerializer;
+import com.github.bdqfork.core.serializtion.Serializer;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -21,16 +23,22 @@ public class OperationHandler implements InvocationHandler {
     private int datebaseId;
     private NettyChannel nettyChannel;
     private BlockingQueue<OperationContext> queue;
+    private Serializer serializer;
 
     public OperationHandler(int datebaseId, NettyChannel nettyChannel, BlockingQueue<OperationContext> queue) {
+        this(datebaseId, nettyChannel, queue, new JdkSerializer());
+    }
+
+    public OperationHandler(int datebaseId, NettyChannel nettyChannel, BlockingQueue<OperationContext> queue, Serializer serializer) {
         this.datebaseId = datebaseId;
         this.nettyChannel = nettyChannel;
         this.queue = queue;
+        this.serializer = serializer;
     }
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-
+        // todo: 根据args对命令进行解析，将参数转换为对应的类型，包括对命令中value参数进行序列化以及对返回值进行反序列化
         OperationContext operationContext = new OperationContext(datebaseId, method.getName(), args);
 
         CommandFuture commandFuture = new CommandFuture();
