@@ -2,6 +2,7 @@ package com.github.bdqfork.server.ops;
 
 import com.github.bdqfork.core.exception.IllegalCommandException;
 import com.github.bdqfork.core.exception.JRedisException;
+import com.github.bdqfork.core.operation.Operation;
 import com.github.bdqfork.core.operation.ValueOperation;
 import com.github.bdqfork.core.protocol.LiteralWrapper;
 import com.github.bdqfork.core.util.ReflectUtils;
@@ -23,7 +24,7 @@ public class GenericServerOperation extends AbstractServerOperation {
     private static final Logger log = LoggerFactory.getLogger(GenericServerOperation.class);
 
     private final Map<String, Class<?>> operations = new HashMap<>();
-    private final Map<String, ServerOperation> operationInstances = new HashMap<>();
+    private final Map<String, Operation> operationInstances = new HashMap<>();
 
     private ServerValueOperation serverValueOperation;
 
@@ -48,12 +49,12 @@ public class GenericServerOperation extends AbstractServerOperation {
         }
 
         Class<?> operationClass = operations.get(cmd);
-        ServerOperation serverOperation = operationInstances.get(cmd);
+        Operation operation = operationInstances.get(cmd);
 
         //todo set方法执行时，返回值为空
         try {
             Method method = ReflectUtils.getMethod(operationClass, cmd, getParameterTypes(cmd));
-            LiteralWrapper result = (LiteralWrapper) method.invoke(serverOperation, args);
+            LiteralWrapper result = (LiteralWrapper) method.invoke(operation, args);
             if (result == null) {
                 result = LiteralWrapper.singleWrapper("OK");
             }
