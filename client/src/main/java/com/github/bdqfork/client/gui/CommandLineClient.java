@@ -65,7 +65,15 @@ public class CommandLineClient {
 
     private Object[] getArgs(String[] lits) {
         // todo: 需要进一步将数据进行类型转换
-        return Arrays.stream(lits).skip(1).toArray();
+        Object[] objs = Arrays.stream(lits).skip(1).toArray();
+        if (objs.length > 1) {
+            for (int i = 1; i < objs.length; i++) {
+                try {
+                    objs[i] = Long.parseLong((String) objs[i]);
+                } catch (NumberFormatException ignored){}
+            }
+        }
+        return objs;
     }
 
     private String getCmd(String[] lits) {

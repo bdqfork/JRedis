@@ -40,10 +40,9 @@ public class GenericClientOperation implements Operation {
         }
         Class<?> clazz = operations.get(cmd);
         Operation instance = operationInstances.get(cmd);
-        Class<?>[] parameterTypes = Arrays.stream(args).map(Object::getClass).toArray(Class[]::new);
         Method method;
         try {
-            method = clazz.getMethod(cmd, parameterTypes);
+            method = clazz.getMethod(cmd, getParameterTypes(cmd));
         } catch (NoSuchMethodException e) {
             throw new IllegalCommandException(String.format("Illegal command %s", cmd));
         }
@@ -52,5 +51,16 @@ public class GenericClientOperation implements Operation {
         } catch (IllegalAccessException | InvocationTargetException e) {
             throw new JRedisException(e);
         }
+    }
+
+    private Class<?>[] getParameterTypes(String method) {
+        if ("get".equals(method)) {
+            return new Class[]{String.class};
+        }
+
+        if ("set".equals(method)) {
+            return new Class[]{String.class, Object.class};
+        }
+        throw new IllegalCommandException(String.format("Illegal command %s", method));
     }
 }

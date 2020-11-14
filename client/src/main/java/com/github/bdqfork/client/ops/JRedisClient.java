@@ -16,13 +16,13 @@ public class JRedisClient {
     private final BlockingQueue<OperationContext> queue = new ArrayBlockingQueue<>(256);
     private final String host;
     private final Integer port;
-    private int datebaseId;
+    private int databaseId;
     private NettyChannel nettyChannel;
 
-    public JRedisClient(String host, Integer port, int datebaseId) {
+    public JRedisClient(String host, Integer port, int databaseId) {
         this.host = host;
         this.port = port;
-        this.datebaseId = datebaseId;
+        this.databaseId = databaseId;
     }
 
     public void connect() {
@@ -32,14 +32,14 @@ public class JRedisClient {
 
     public synchronized ValueOperation OpsForValue() {
         return (ValueOperation) Proxy.newProxyInstance(ValueOperation.class.getClassLoader(),
-                new Class[]{ValueOperation.class}, new OperationHandler(datebaseId, nettyChannel, queue));
+                new Class[]{ValueOperation.class}, new OperationHandler(databaseId, nettyChannel, queue));
     }
 
     public void close() {
         nettyChannel.close();
     }
 
-    public void setDatebaseId(int datebaseId) {
-        this.datebaseId = datebaseId;
+    public void setDatabaseId(int databaseId) {
+        this.databaseId = databaseId;
     }
 }

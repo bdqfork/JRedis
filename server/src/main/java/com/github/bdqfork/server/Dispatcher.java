@@ -30,13 +30,13 @@ public class Dispatcher {
 
     public CommandFuture dispatch(OperationContext operationContext) {
         CommandFuture commandFuture = new CommandFuture();
-        operationContext.setResultFutrue(commandFuture);
+        operationContext.setResultFuture(commandFuture);
         try {
             queue.put(operationContext);
         } catch (InterruptedException e) {
             throw new JRedisException(e);
         }
-        return operationContext.getResultFutrue();
+        return operationContext.getResultFuture();
     }
 
     public void accept() {
@@ -67,14 +67,14 @@ public class Dispatcher {
     }
 
     private void handle(OperationContext operationContext) {
-        int databaseId = operationContext.getDatebaseId();
+        int databaseId = operationContext.getDatabaseId();
 
         GenericServerOperation genericServerOperation = getGenericServerOperation(databaseId);
 
         String cmd = operationContext.getCmd();
         Object[] args = operationContext.getArgs();
 
-        CommandFuture commandFuture = operationContext.getResultFutrue();
+        CommandFuture commandFuture = operationContext.getResultFuture();
         try {
             LiteralWrapper literalWrapper = genericServerOperation.execute(cmd, args);
             commandFuture.complete(literalWrapper);

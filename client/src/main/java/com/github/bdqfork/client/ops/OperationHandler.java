@@ -2,9 +2,12 @@ package com.github.bdqfork.client.ops;
 
 import com.github.bdqfork.client.netty.NettyChannel;
 import com.github.bdqfork.core.CommandFuture;
+import com.github.bdqfork.core.exception.FailedDeserializeException;
+import com.github.bdqfork.core.exception.FailedSerializeException;
 import com.github.bdqfork.core.exception.JRedisException;
 import com.github.bdqfork.core.operation.OperationContext;
 import com.github.bdqfork.core.protocol.LiteralWrapper;
+import com.github.bdqfork.core.protocol.Type;
 import com.github.bdqfork.core.serializtion.JdkSerializer;
 import com.github.bdqfork.core.serializtion.Serializer;
 
@@ -20,17 +23,17 @@ import java.util.concurrent.ExecutionException;
  * @since 2020/11/10
  */
 public class OperationHandler implements InvocationHandler {
-    private int datebaseId;
+    private int databaseId;
     private NettyChannel nettyChannel;
     private BlockingQueue<OperationContext> queue;
     private Serializer serializer;
 
-    public OperationHandler(int datebaseId, NettyChannel nettyChannel, BlockingQueue<OperationContext> queue) {
-        this(datebaseId, nettyChannel, queue, new JdkSerializer());
+    public OperationHandler(int databaseId, NettyChannel nettyChannel, BlockingQueue<OperationContext> queue) {
+        this(databaseId, nettyChannel, queue, new JdkSerializer());
     }
 
-    public OperationHandler(int datebaseId, NettyChannel nettyChannel, BlockingQueue<OperationContext> queue, Serializer serializer) {
-        this.datebaseId = datebaseId;
+    public OperationHandler(int databaseId, NettyChannel nettyChannel, BlockingQueue<OperationContext> queue, Serializer serializer) {
+        this.databaseId = databaseId;
         this.nettyChannel = nettyChannel;
         this.queue = queue;
         this.serializer = serializer;
@@ -39,10 +42,11 @@ public class OperationHandler implements InvocationHandler {
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         // todo: 根据args对命令进行解析，将参数转换为对应的类型，包括对命令中value参数进行序列化以及对返回值进行反序列化
-        OperationContext operationContext = new OperationContext(datebaseId, method.getName(), args);
+        String methodName = method.getName();
+        OperationContext operationContext = new OperationContext(databaseId, methodName, serialize(methodName,args));
 
         CommandFuture commandFuture = new CommandFuture();
-        operationContext.setResultFutrue(commandFuture);
+        operationContext.setResultFuture(commandFuture);
 
         try {
             queue.put(operationContext);
@@ -56,10 +60,20 @@ public class OperationHandler implements InvocationHandler {
 
         try {
             LiteralWrapper literalWrapper = (LiteralWrapper) commandFuture.get();
+            if (literalWrapper.getType() == Type.BULK) {
+                return serializer.deserialize(literalWrapper.getData(), String.class);
+            }
             return literalWrapper.getData();
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (InterruptedException | ExecutionException | FailedDeserializeException e) {
             throw new JRedisException(e);
         }
+    }
+
+    private Object[] serialize(String method, Object[] args) throws FailedSerializeException {
+        if ("set".equals(method)) {
+            args[1] = serializer.serialize(args[1]);
+        }
+        return args;
     }
 
     private String encode(OperationContext operationContext) {

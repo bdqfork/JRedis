@@ -35,7 +35,7 @@ public class CommandHandler extends SimpleChannelInboundHandler<Object> {
         LiteralWrapper literalWrapper = (LiteralWrapper) msg;
         if (!queue.isEmpty()) {
             OperationContext operationContext = queue.take();
-            CommandFuture commandFuture = operationContext.getResultFutrue();
+            CommandFuture commandFuture = operationContext.getResultFuture();
             commandFuture.complete(literalWrapper);
         }
     }

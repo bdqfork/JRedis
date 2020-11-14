@@ -1,5 +1,6 @@
 package com.github.bdqfork.server.ops;
 
+import com.github.bdqfork.core.exception.IllegalCommandException;
 import com.github.bdqfork.core.exception.JRedisException;
 import com.github.bdqfork.core.operation.ValueOperation;
 import com.github.bdqfork.core.protocol.LiteralWrapper;
@@ -47,19 +48,30 @@ public class GenericServerOperation extends AbstractServerOperation {
         }
 
         Class<?> operationClass = operations.get(cmd);
-
-        Class<?>[] parameterTypes = Arrays.stream(args)
-                .map(Object::getClass)
-                .toArray(Class[]::new);
-
         ServerOperation serverOperation = operationInstances.get(cmd);
 
+        //todo set方法执行时，返回值为空
         try {
-            Method method = ReflectUtils.getMethod(operationClass, cmd, parameterTypes);
-            return (LiteralWrapper) method.invoke(serverOperation, args);
+            Method method = ReflectUtils.getMethod(operationClass, cmd, getParameterTypes(cmd));
+            LiteralWrapper result = (LiteralWrapper) method.invoke(serverOperation, args);
+            if (result == null) {
+                result = LiteralWrapper.singleWrapper("OK");
+            }
+            return result;
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
             throw new JRedisException(e);
         }
+    }
+
+    private Class<?>[] getParameterTypes(String method) {
+        if ("get".equals(method)) {
+            return new Class[]{String.class};
+        }
+
+        if ("set".equals(method)) {
+            return new Class[]{String.class, Object.class};
+        }
+        throw new IllegalCommandException(String.format("Illegal command %s", method));
     }
 
 }

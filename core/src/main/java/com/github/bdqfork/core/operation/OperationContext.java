@@ -7,19 +7,19 @@ import com.github.bdqfork.core.CommandFuture;
  * @since 2020/11/9
  */
 public class OperationContext {
-    private int datebaseId;
+    private int databaseId;
     private String cmd;
     private Object[] args;
-    private CommandFuture resultFutrue;
+    private CommandFuture resultFuture;
 
-    public OperationContext(int datebaseId, String cmd, Object[] args) {
-        this.datebaseId = datebaseId;
+    public OperationContext(int databaseId, String cmd, Object[] args) {
+        this.databaseId = databaseId;
         this.cmd = cmd;
         this.args = args;
     }
 
-    public int getDatebaseId() {
-        return datebaseId;
+    public int getDatabaseId() {
+        return databaseId;
     }
 
     public String getCmd() {
@@ -30,11 +30,11 @@ public class OperationContext {
         return args;
     }
 
-    public CommandFuture getResultFutrue() {
-        return resultFutrue;
+    public CommandFuture getResultFuture() {
+        return resultFuture;
     }
 
-    public void setResultFutrue(CommandFuture resultFutrue) {
-        this.resultFutrue = resultFutrue;
+    public void setResultFuture(CommandFuture resultFuture) {
+        this.resultFuture = resultFuture;
     }
 }
