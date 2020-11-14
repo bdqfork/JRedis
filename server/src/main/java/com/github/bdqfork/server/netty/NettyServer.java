@@ -14,6 +14,8 @@ import io.netty.handler.codec.string.StringEncoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.charset.StandardCharsets;
+
 /**
  * 服务端，接收用户请求
  *
@@ -51,7 +53,7 @@ public class NettyServer {
                     protected void initChannel(SocketChannel ch) throws Exception {
                         ch.pipeline()
                                 .addLast(new MessageDecoder(MAX_CAPCITY))
-                                .addLast(new StringEncoder())
+                                .addLast(new StringEncoder(StandardCharsets.ISO_8859_1))
                                 .addLast(new CommandHandler(dispatcher));
                     }
                 });

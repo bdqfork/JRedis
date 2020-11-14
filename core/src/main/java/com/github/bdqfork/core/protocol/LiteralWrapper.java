@@ -1,5 +1,6 @@
 package com.github.bdqfork.core.protocol;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -108,7 +109,7 @@ public class LiteralWrapper {
                 if (data == null) {
                     builder.append('$').append(-1).append("\r\n");
                 } else {
-                    String bulk = new String(data);
+                    String bulk = new String(data, StandardCharsets.ISO_8859_1);
                     builder.append('$').append(bulk.length()).append("\r\n");
                     builder.append(bulk).append("\r\n");
                 }
@@ -156,7 +157,7 @@ public class LiteralWrapper {
                 if (data == null) {
                     builder.insert(0, "\r\n").insert(0, "nil");
                 } else {
-                    builder.insert(0, "\r\n").insert(0, new String(data));
+                    builder.insert(0, "\r\n").insert(0, new String(data, StandardCharsets.ISO_8859_1));
                 }
             }
 

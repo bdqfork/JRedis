@@ -61,7 +61,7 @@ public class OperationHandler implements InvocationHandler {
         try {
             LiteralWrapper literalWrapper = (LiteralWrapper) commandFuture.get();
             if (literalWrapper.getType() == Type.BULK) {
-                return serializer.deserialize(literalWrapper.getData(), String.class);
+                return serializer.deserialize(literalWrapper.getData(), Object.class);
             }
             return literalWrapper.getData();
         } catch (InterruptedException | ExecutionException | FailedDeserializeException e) {

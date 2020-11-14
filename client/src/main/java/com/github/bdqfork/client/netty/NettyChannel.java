@@ -14,6 +14,7 @@ import io.netty.handler.codec.string.StringEncoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.BlockingQueue;
 
 /**
@@ -48,7 +49,7 @@ public class NettyChannel {
                     protected void initChannel(SocketChannel ch) throws Exception {
                         ch.pipeline()
                                 .addLast(new MessageDecoder(MAX_CAPCITY))
-                                .addLast(new StringEncoder())
+                                .addLast(new StringEncoder(StandardCharsets.ISO_8859_1))
                                 .addLast(new CommandHandler(queue));
                         if (channel != null && channel.isActive()) {
                             channel.closeFuture().sync();

@@ -39,8 +39,8 @@ public class Database {
      * @param value 值
      */
     public void saveOrUpdate(String key, Object value, Long expireAt) {
+        dictMap.put(key, value);
         if (expireAt > 0) {
-            dictMap.put(key, value);
             Date date = DateUtils.getDateFromNow(expireAt, ChronoUnit.MILLIS);
             expireMap.put(key, date.getTime());
         }
@@ -56,7 +56,8 @@ public class Database {
         if (!dictMap.containsKey(key)) {
             return null;
         }
-        if (ttl(key) > 0) {
+        Long ttl = ttl(key);
+        if (ttl == null || ttl > 0) {
             return dictMap.get(key);
         } else {
             dictMap.remove(key);
@@ -71,7 +72,11 @@ public class Database {
      * @param key 键
      */
     public Long ttl(String key) {
-        return expireMap.get(key) - System.currentTimeMillis();
+        if (expireMap.containsKey(key)) {
+            return expireMap.get(key) - System.currentTimeMillis();
+        } else {
+            return null;
+        }
     }
 
     /**

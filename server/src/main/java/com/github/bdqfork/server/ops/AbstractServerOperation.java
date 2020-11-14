@@ -45,12 +45,12 @@ public class AbstractServerOperation implements ServerOperation {
         if (result instanceof List) {
             literalWrapper = LiteralWrapper.multiWrapper();
             List<?> items = (List<?>) result;
-            List<LiteralWrapper> literalWrappers = items.stream().map(this::encodeResult).collect(Collectors.toList());
-            literalWrapper.setData(literalWrappers);
+            result = items.stream().map(this::encodeResult).collect(Collectors.toList());
         }
         if (literalWrapper == null) {
             literalWrapper = LiteralWrapper.bulkWrapper();
         }
+        literalWrapper.setData(result);
         return literalWrapper;
     }
 
