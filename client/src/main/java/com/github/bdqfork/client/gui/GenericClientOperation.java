@@ -1,5 +1,6 @@
 package com.github.bdqfork.client.gui;
 
+import com.github.bdqfork.core.exception.FailedExecuteOperationException;
 import com.github.bdqfork.core.exception.IllegalCommandException;
 import com.github.bdqfork.client.ops.JRedisClient;
 import com.github.bdqfork.core.exception.JRedisException;
@@ -34,7 +35,7 @@ public class GenericClientOperation implements Operation {
                 });
     }
 
-    public Object execute(String cmd, Object[] args) {
+    public Object execute(String cmd, Object[] args) throws Throwable {
         if (!operations.containsKey(cmd)) {
             throw new IllegalCommandException(String.format("Illegal command %s", cmd));
         }
@@ -50,6 +51,8 @@ public class GenericClientOperation implements Operation {
             return method.invoke(instance, args);
         } catch (IllegalAccessException | InvocationTargetException e) {
             throw new JRedisException(e);
+        } catch (Throwable e) {
+            throw e.getCause();
         }
     }
 
@@ -57,7 +60,7 @@ public class GenericClientOperation implements Operation {
         if ("get".equals(method)) {
             return new Class[]{String.class};
         }
-
+        //todo 添加其他命令执行参数
         if ("set".equals(method)) {
             return new Class[]{String.class, Object.class};
         }

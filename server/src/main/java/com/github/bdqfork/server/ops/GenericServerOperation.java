@@ -56,7 +56,7 @@ public class GenericServerOperation extends AbstractServerOperation {
             Method method = ReflectUtils.getMethod(operationClass, cmd, getParameterTypes(cmd));
             LiteralWrapper result = (LiteralWrapper) method.invoke(operation, args);
             if (result == null) {
-                result = LiteralWrapper.singleWrapper("OK");
+                result = LiteralWrapper.bulkWrapper();
             }
             return result;
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
