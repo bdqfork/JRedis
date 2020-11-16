@@ -12,7 +12,7 @@ public class StateMachineTest {
     public void decode() {
         StateMachine stateMachine = new StateMachine();
         String[] lines = {"*3", "*3", "$3", "foo", "$-1", "$3", "bar", "*-1", "-error"};
-        LiteralWrapper wrapper = null;
+        LiteralWrapper<?> wrapper = null;
         for (String line : lines) {
             ByteBuf byteBuf = Unpooled.wrappedBuffer(line.getBytes());
             wrapper = stateMachine.decode(byteBuf);

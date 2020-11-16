@@ -57,10 +57,10 @@ public class OperationHandler implements InvocationHandler {
         nettyChannel.send(cmd);
 
         try {
-            LiteralWrapper literalWrapper = (LiteralWrapper) commandFuture.get();
+            LiteralWrapper<?> literalWrapper = (LiteralWrapper<?>) commandFuture.get();
 
             if (literalWrapper.isTypeOf(Type.BULK) && literalWrapper.getData() != null) {
-                return serializer.deserialize(literalWrapper.getData(), Object.class);
+                return serializer.deserialize((byte[]) literalWrapper.getData(), Object.class);
             }
 
             return literalWrapper.getData();
@@ -77,32 +77,34 @@ public class OperationHandler implements InvocationHandler {
     }
 
     private String encode(OperationContext operationContext) {
-        LiteralWrapper literalWrapper = encodeArgs(operationContext.getArgs());
+        LiteralWrapper<LiteralWrapper<?>> literalWrapper = encodeArgs(operationContext.getArgs());
 
-        List<LiteralWrapper> literalWrappers = literalWrapper.getData();
-        LiteralWrapper cmdLiteralWrapper = LiteralWrapper.singleWrapper();
+        @SuppressWarnings("unchecked")
+        List<LiteralWrapper<?>> literalWrappers = (List<LiteralWrapper<?>>) literalWrapper.getData();
+
+        LiteralWrapper<String> cmdLiteralWrapper = LiteralWrapper.singleWrapper();
         cmdLiteralWrapper.setData(operationContext.getCmd());
         literalWrappers.add(0, cmdLiteralWrapper);
 
         return literalWrapper.encode();
     }
 
-    private LiteralWrapper encodeArgs(Object[] args) {
-        List<LiteralWrapper> literalWrappers = new ArrayList<>();
+    private LiteralWrapper<LiteralWrapper<?>> encodeArgs(Object[] args) {
+        List<LiteralWrapper<?>> literalWrappers = new ArrayList<>();
 
         for (Object arg : args) {
             if (arg instanceof String) {
-                LiteralWrapper singleWrapper = LiteralWrapper.singleWrapper();
+                LiteralWrapper<String> singleWrapper = LiteralWrapper.singleWrapper();
                 singleWrapper.setData(arg);
                 literalWrappers.add(singleWrapper);
             }
             if (arg instanceof Number) {
-                LiteralWrapper integerWrapper = LiteralWrapper.integerWrapper();
-                integerWrapper.setData(arg);
+                LiteralWrapper<Long> integerWrapper = LiteralWrapper.integerWrapper();
+                integerWrapper.setData(((Number) arg).longValue());
                 literalWrappers.add(integerWrapper);
             }
             if (arg instanceof byte[]) {
-                LiteralWrapper bulkWrapper = LiteralWrapper.bulkWrapper();
+                LiteralWrapper<byte[]> bulkWrapper = LiteralWrapper.bulkWrapper();
                 bulkWrapper.setData(arg);
                 literalWrappers.add(bulkWrapper);
             }
@@ -111,7 +113,7 @@ public class OperationHandler implements InvocationHandler {
                 literalWrappers.add(encodeArgs(items.toArray()));
             }
         }
-        LiteralWrapper wrapper = LiteralWrapper.multiWrapper();
+        LiteralWrapper<LiteralWrapper<?>> wrapper = LiteralWrapper.multiWrapper();
         wrapper.setData(literalWrappers);
         return wrapper;
     }

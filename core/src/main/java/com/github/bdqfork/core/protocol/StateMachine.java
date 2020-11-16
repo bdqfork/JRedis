@@ -18,11 +18,11 @@ public class StateMachine {
         this.stack = new Stack<>();
     }
 
-    public LiteralWrapper decode(ByteBuf byteBuf) {
+    public LiteralWrapper<?> decode(ByteBuf byteBuf) {
         if (stack.isEmpty()) {
             stack.push(new State());
         }
-        LiteralWrapper latestLiteralWrapper = null;
+        LiteralWrapper<?> latestLiteralWrapper = null;
         while (!stack.isEmpty()) {
             State state = stack.peek();
             if (state.type == null) {
@@ -70,19 +70,21 @@ public class StateMachine {
                     state.count = readLong(byteBuf);
                     state.wrapper = LiteralWrapper.multiWrapper();
                     if (state.count >= 0) {
-                        List<LiteralWrapper> literalWrappers = new ArrayList<>((int) state.count);
+                        List<LiteralWrapper<?>> literalWrappers = new ArrayList<>((int) state.count);
                         state.wrapper.setData(literalWrappers);
                     }
                 } else if (state.count == 0) {
                     stack.pop();
                     if (latestLiteralWrapper != null) {
-                        List<LiteralWrapper> literalWrappers = state.wrapper.getData();
+                        @SuppressWarnings("unchecked")
+                        List<LiteralWrapper<?>> literalWrappers = (List<LiteralWrapper<?>>) state.wrapper.getData();
                         literalWrappers.add(latestLiteralWrapper);
                     }
                     latestLiteralWrapper = state.wrapper;
                 } else {
                     if (latestLiteralWrapper != null) {
-                        List<LiteralWrapper> literalWrappers = state.wrapper.getData();
+                        @SuppressWarnings("unchecked")
+                        List<LiteralWrapper<?>> literalWrappers = (List<LiteralWrapper<?>>) state.wrapper.getData();
                         literalWrappers.add(latestLiteralWrapper);
                     }
                     stack.push(new State());
@@ -104,7 +106,7 @@ public class StateMachine {
         return data;
     }
 
-    private LiteralWrapper getWrapper(Type type) {
+    private LiteralWrapper<?> getWrapper(Type type) {
         switch (type) {
             case SINGLE:
                 return LiteralWrapper.singleWrapper();
@@ -119,11 +121,6 @@ public class StateMachine {
             default:
                 throw new JRedisException("Not support type");
         }
-    }
-
-    private boolean checkIfOneLine(State state) {
-        return state.type == Type.SINGLE || state.type == Type.ERROR
-                || state.type == Type.INTEGER || state.type == Type.BYTES;
     }
 
     private Long readLong(ByteBuf byteBuf) {
@@ -159,7 +156,7 @@ public class StateMachine {
     private static class State {
         Type type;
         long count = Long.MIN_VALUE;
-        LiteralWrapper wrapper;
+        LiteralWrapper<?> wrapper;
     }
 
 }
