@@ -1,6 +1,5 @@
 package com.github.bdqfork.client.gui;
 
-import com.github.bdqfork.core.exception.FailedExecuteOperationException;
 import com.github.bdqfork.core.exception.IllegalCommandException;
 import com.github.bdqfork.client.ops.JRedisClient;
 import com.github.bdqfork.core.exception.JRedisException;

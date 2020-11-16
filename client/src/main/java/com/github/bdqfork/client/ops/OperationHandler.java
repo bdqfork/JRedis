@@ -2,9 +2,7 @@ package com.github.bdqfork.client.ops;
 
 import com.github.bdqfork.client.netty.NettyChannel;
 import com.github.bdqfork.core.CommandFuture;
-import com.github.bdqfork.core.exception.FailedDeserializeException;
-import com.github.bdqfork.core.exception.FailedExecuteOperationException;
-import com.github.bdqfork.core.exception.FailedSerializeException;
+import com.github.bdqfork.core.exception.SerializeException;
 import com.github.bdqfork.core.exception.JRedisException;
 import com.github.bdqfork.core.operation.OperationContext;
 import com.github.bdqfork.core.protocol.LiteralWrapper;
@@ -43,7 +41,7 @@ public class OperationHandler implements InvocationHandler {
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Exception {
         String methodName = method.getName();
-        OperationContext operationContext = new OperationContext(databaseId, methodName, serialize(methodName,args));
+        OperationContext operationContext = new OperationContext(databaseId, methodName, serialize(methodName, args));
 
         CommandFuture commandFuture = new CommandFuture();
         operationContext.setResultFuture(commandFuture);
@@ -60,23 +58,18 @@ public class OperationHandler implements InvocationHandler {
 
         try {
             LiteralWrapper literalWrapper = (LiteralWrapper) commandFuture.get();
-            parseError(literalWrapper);
-            if (literalWrapper.getData() != null && literalWrapper.getType() == Type.BULK) {
+
+            if (literalWrapper.isTypeOf(Type.BULK) && literalWrapper.getData() != null) {
                 return serializer.deserialize(literalWrapper.getData(), Object.class);
             }
+
             return literalWrapper.getData();
-        } catch (InterruptedException | ExecutionException | FailedDeserializeException e) {
+        } catch (InterruptedException | ExecutionException | SerializeException e) {
             throw new JRedisException(e);
         }
     }
 
-    private void parseError(LiteralWrapper literalWrapper) throws Exception {
-        if (literalWrapper.getType() == Type.ERROR) {
-            //todo 解析错误
-            throw new FailedExecuteOperationException(literalWrapper.getData());
-        }
-    }
-    private Object[] serialize(String method, Object[] args) throws FailedSerializeException {
+    private Object[] serialize(String method, Object[] args) throws SerializeException {
         if ("set".equals(method)) {
             args[1] = serializer.serialize(args[1]);
         }

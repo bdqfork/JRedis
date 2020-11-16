@@ -1,6 +1,6 @@
 package com.github.bdqfork.server.transaction.backup;
 
-import com.github.bdqfork.core.exception.FailedSerializeException;
+import com.github.bdqfork.core.exception.SerializeException;
 import com.github.bdqfork.server.transaction.TransactionLog;
 
 import java.io.File;
@@ -43,7 +43,7 @@ public class AlwaysBackup extends AbstractBackupStrategy {
             }
             fileOutputStream.flush();
             fileOutputStream.close();
-        } catch (FailedSerializeException | IOException e) {
+        } catch (SerializeException | IOException e) {
             throw new IllegalStateException(e);
         }
     }

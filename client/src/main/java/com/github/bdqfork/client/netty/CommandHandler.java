@@ -1,8 +1,10 @@
 package com.github.bdqfork.client.netty;
 
+import com.github.bdqfork.core.exception.JRedisException;
 import com.github.bdqfork.core.operation.OperationContext;
 import com.github.bdqfork.core.CommandFuture;
 import com.github.bdqfork.core.protocol.LiteralWrapper;
+import com.github.bdqfork.core.protocol.Type;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
@@ -36,7 +38,12 @@ public class CommandHandler extends SimpleChannelInboundHandler<Object> {
         if (!queue.isEmpty()) {
             OperationContext operationContext = queue.take();
             CommandFuture commandFuture = operationContext.getResultFuture();
-            commandFuture.complete(literalWrapper);
+            if (!literalWrapper.isTypeOf(Type.ERROR)){
+                commandFuture.complete(literalWrapper);
+            }else {
+                commandFuture.completeExceptionally(new JRedisException((String) literalWrapper.getData()));
+            }
         }
     }
+
 }

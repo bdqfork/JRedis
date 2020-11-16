@@ -1,6 +1,6 @@
 package com.github.bdqfork.server.transaction;
 
-import com.github.bdqfork.core.exception.FailedTransactionException;
+import com.github.bdqfork.core.exception.TransactionException;
 import com.github.bdqfork.server.ops.Command;
 import com.github.bdqfork.server.ops.UpdateCommand;
 import com.github.bdqfork.server.database.Database;
@@ -52,7 +52,7 @@ public class TransactionManager {
      *
      * @return Object 事务执行结果
      */
-    public Object commit(Long transactionId) throws FailedTransactionException {
+    public Object commit(Long transactionId) throws TransactionException {
         Object result = null;
 
         Transaction transaction = transactionMap.get(transactionId);

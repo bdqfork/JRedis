@@ -1,6 +1,5 @@
 package com.github.bdqfork.client.gui;
 
-import com.github.bdqfork.core.exception.FailedExecuteOperationException;
 import com.github.bdqfork.core.exception.IllegalCommandException;
 import com.github.bdqfork.client.ops.JRedisClient;
 import com.github.bdqfork.core.exception.JRedisException;
@@ -56,6 +55,7 @@ public class CommandLineClient {
                 System.exit(0);
             } catch (Throwable e) {
                 System.out.println("Error " + e.getMessage());
+                continue;
             }
 
             if (result == null) {
