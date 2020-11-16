@@ -38,6 +38,11 @@ public class ServerValueOperation extends AbstractServerOperation implements Val
     }
 
     @Override
+    public void del(String key) {
+
+    }
+
+    @Override
     public Long ttl(String key) {
         return null;
     }
