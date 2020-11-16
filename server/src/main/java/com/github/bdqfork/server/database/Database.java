@@ -73,7 +73,12 @@ public class Database {
      */
     public Long ttl(String key) {
         if (expireMap.containsKey(key)) {
-            return expireMap.get(key) - System.currentTimeMillis();
+            long ttl = expireMap.get(key) - System.currentTimeMillis();
+            if (ttl <= 0) {
+                expireMap.remove(key);
+                return null;
+            }
+            return ttl;
         } else {
             return null;
         }
@@ -85,6 +90,9 @@ public class Database {
      * @param key 键
      */
     public Long ttlAt(String key) {
+        if (expireMap.containsKey(key) && expireMap.get(key) - System.currentTimeMillis() <= 0) {
+            expireMap.remove(key);
+        }
         return expireMap.get(key);
     }
 }
