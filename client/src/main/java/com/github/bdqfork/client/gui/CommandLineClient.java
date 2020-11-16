@@ -1,5 +1,6 @@
 package com.github.bdqfork.client.gui;
 
+import com.github.bdqfork.core.exception.FailedExecuteOperationException;
 import com.github.bdqfork.core.exception.IllegalCommandException;
 import com.github.bdqfork.client.ops.JRedisClient;
 import com.github.bdqfork.core.exception.JRedisException;
@@ -42,7 +43,7 @@ public class CommandLineClient {
                 continue;
             }
             String cmd = getCmd(lits);
-            Object[] args = getArgs(lits);
+            Object[] args = getArgs(cmd, lits);
 
             Object result = null;
             try {
@@ -51,26 +52,31 @@ public class CommandLineClient {
                 System.out.println(e.getMessage());
                 continue;
             } catch (JRedisException e) {
-                System.out.println("Error");
+                System.out.println("Error " + e.getMessage());
                 System.exit(0);
+            } catch (Throwable e) {
+                System.out.println("Error " + e.getMessage());
             }
 
             if (result == null) {
-                System.out.println("nil");
+                if ("get".equals(cmd)) {
+                    System.out.println("nil");
+                } else {
+                    System.out.println("OK");
+                }
             } else {
                 System.out.println(result);
             }
         }
     }
 
-    private Object[] getArgs(String[] lits) {
+    private Object[] getArgs(String cmd, String[] lits) {
         // todo: 需要进一步将数据进行类型转换
         Object[] objs = Arrays.stream(lits).skip(1).toArray();
-        if (objs.length > 1) {
-            for (int i = 1; i < objs.length; i++) {
-                try {
-                    objs[i] = Long.parseLong((String) objs[i]);
-                } catch (NumberFormatException ignored){}
+        if ("set".equals(cmd) && objs.length > 1) {
+            try {
+                objs[1] = Long.parseLong((String) objs[1]);
+            } catch (NumberFormatException ignored) {
             }
         }
         return objs;

@@ -3,6 +3,7 @@ package com.github.bdqfork.client.ops;
 import com.github.bdqfork.client.netty.NettyChannel;
 import com.github.bdqfork.core.CommandFuture;
 import com.github.bdqfork.core.exception.FailedDeserializeException;
+import com.github.bdqfork.core.exception.FailedExecuteOperationException;
 import com.github.bdqfork.core.exception.FailedSerializeException;
 import com.github.bdqfork.core.exception.JRedisException;
 import com.github.bdqfork.core.operation.OperationContext;
@@ -40,8 +41,7 @@ public class OperationHandler implements InvocationHandler {
     }
 
     @Override
-    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        // todo: 根据args对命令进行解析，将参数转换为对应的类型，包括对命令中value参数进行序列化以及对返回值进行反序列化
+    public Object invoke(Object proxy, Method method, Object[] args) throws Exception {
         String methodName = method.getName();
         OperationContext operationContext = new OperationContext(databaseId, methodName, serialize(methodName,args));
 
@@ -60,7 +60,8 @@ public class OperationHandler implements InvocationHandler {
 
         try {
             LiteralWrapper literalWrapper = (LiteralWrapper) commandFuture.get();
-            if (literalWrapper.getType() == Type.BULK) {
+            parseError(literalWrapper);
+            if (literalWrapper.getData() != null && literalWrapper.getType() == Type.BULK) {
                 return serializer.deserialize(literalWrapper.getData(), Object.class);
             }
             return literalWrapper.getData();
@@ -69,6 +70,12 @@ public class OperationHandler implements InvocationHandler {
         }
     }
 
+    private void parseError(LiteralWrapper literalWrapper) throws Exception {
+        if (literalWrapper.getType() == Type.ERROR) {
+            //todo 解析错误
+            throw new FailedExecuteOperationException(literalWrapper.getData());
+        }
+    }
     private Object[] serialize(String method, Object[] args) throws FailedSerializeException {
         if ("set".equals(method)) {
             args[1] = serializer.serialize(args[1]);
