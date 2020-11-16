@@ -77,6 +77,7 @@ public class OperationHandler implements InvocationHandler {
             if (args[3] instanceof TimeUnit) {
                 Long expire = (Long) args[2];
                 TimeUnit timeUnit = (TimeUnit) args[3];
+                // todo: 其他单位的转换
                 if (timeUnit == TimeUnit.SECONDS) {
                     expire *= 1000;
                 }
