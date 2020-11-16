@@ -36,6 +36,13 @@ public interface ValueOperation extends Operation {
     <T> T get(String key);
 
     /**
+     * 删除一个键值对
+     *
+     * @param key 键
+     */
+    void del(String key);
+
+    /**
      * 返回剩余过期时间
      *
      * @param key 键
