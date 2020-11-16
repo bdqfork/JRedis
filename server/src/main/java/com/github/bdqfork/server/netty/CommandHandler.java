@@ -47,8 +47,11 @@ public class CommandHandler extends SimpleChannelInboundHandler<Object> {
     }
 
     private OperationContext parse(InetSocketAddress socketAddress, LiteralWrapper command) {
-        List<LiteralWrapper> literalWrappers = command.getData();
-        String cmd = literalWrappers.get(0).getData();
+        @SuppressWarnings("unchecked")
+        List<LiteralWrapper<?>> literalWrappers = (List<LiteralWrapper<?>>) command.getData();
+
+        String cmd = (String) literalWrappers.get(0).getData();
+
         Object[] args = literalWrappers.stream().skip(1).map(LiteralWrapper::getData).toArray();
         Session session = SessionHolder.getSession(socketAddress.getHostName(), socketAddress.getPort());
         return new OperationContext(session.getDatabaseId(), cmd, args);

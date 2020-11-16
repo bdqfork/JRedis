@@ -7,56 +7,56 @@ import java.util.*;
  * @author bdq
  * @since 2020/11/6
  */
-public class LiteralWrapper {
+public class LiteralWrapper<T> {
     private Type type;
     private Object data;
 
-    public static LiteralWrapper singleWrapper() {
-        return new LiteralWrapper(Type.SINGLE);
+    public static LiteralWrapper<String> singleWrapper() {
+        return new LiteralWrapper<>(Type.SINGLE);
     }
 
-    public static LiteralWrapper singleWrapper(String data) {
-        LiteralWrapper literalWrapper = singleWrapper();
+    public static LiteralWrapper<String> singleWrapper(String data) {
+        LiteralWrapper<String> literalWrapper = singleWrapper();
         literalWrapper.setData(data);
         return literalWrapper;
     }
 
-    public static LiteralWrapper errorWrapper() {
-        return new LiteralWrapper(Type.ERROR);
+    public static LiteralWrapper<String> errorWrapper() {
+        return new LiteralWrapper<>(Type.ERROR);
     }
 
-    public static LiteralWrapper errorWrapper(String data) {
-        LiteralWrapper literalWrapper = errorWrapper();
+    public static LiteralWrapper<String> errorWrapper(String data) {
+        LiteralWrapper<String> literalWrapper = errorWrapper();
         literalWrapper.setData(data);
         return literalWrapper;
     }
 
-    public static LiteralWrapper integerWrapper() {
-        return new LiteralWrapper(Type.INTEGER);
+    public static LiteralWrapper<Long> integerWrapper() {
+        return new LiteralWrapper<>(Type.INTEGER);
     }
 
-    public static LiteralWrapper integerWrapper(Number number) {
-        LiteralWrapper literalWrapper = integerWrapper();
+    public static LiteralWrapper<Long> integerWrapper(Number number) {
+        LiteralWrapper<Long> literalWrapper = integerWrapper();
         literalWrapper.setData(number);
         return literalWrapper;
     }
 
-    public static LiteralWrapper bulkWrapper() {
-        return new LiteralWrapper(Type.BULK);
+    public static LiteralWrapper<byte[]> bulkWrapper() {
+        return new LiteralWrapper<>(Type.BULK);
     }
 
-    public static LiteralWrapper bulkWrapper(byte[] data) {
-        LiteralWrapper literalWrapper = bulkWrapper();
+    public static LiteralWrapper<byte[]> bulkWrapper(byte[] data) {
+        LiteralWrapper<byte[]> literalWrapper = bulkWrapper();
         literalWrapper.setData(data);
         return literalWrapper;
     }
 
-    public static LiteralWrapper multiWrapper() {
-        return new LiteralWrapper(Type.MULTI);
+    public static LiteralWrapper<LiteralWrapper<?>> multiWrapper() {
+        return new LiteralWrapper<>(Type.MULTI);
     }
 
-    public static LiteralWrapper multiWrapper(List<?> data) {
-        LiteralWrapper literalWrapper = multiWrapper();
+    public static LiteralWrapper<LiteralWrapper<?>> multiWrapper(List<? extends LiteralWrapper<?>> data) {
+        LiteralWrapper<LiteralWrapper<?>> literalWrapper = multiWrapper();
         literalWrapper.setData(data);
         return literalWrapper;
     }
@@ -78,34 +78,34 @@ public class LiteralWrapper {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T getData() {
+    public T getData() {
         return (T) data;
     }
 
     public String encode() {
         StringBuilder builder = new StringBuilder();
-        Stack<LiteralWrapper> stack = new Stack<>();
+        Stack<LiteralWrapper<?>> stack = new Stack<>();
         stack.push(this);
 
         while (!stack.isEmpty()) {
-            LiteralWrapper literalWrapper = stack.pop();
+            LiteralWrapper<?> literalWrapper = stack.pop();
             if (literalWrapper.isTypeOf(Type.SINGLE)) {
-                String data = literalWrapper.getData();
+                String data = (String) literalWrapper.getData();
                 builder.append('+').append(data).append("\r\n");
             }
 
             if (literalWrapper.isTypeOf(Type.ERROR)) {
-                String data = literalWrapper.getData();
+                String data = (String) literalWrapper.getData();
                 builder.append('-').append(data).append("\r\n");
             }
 
             if (literalWrapper.isTypeOf(Type.INTEGER)) {
-                Number data = literalWrapper.getData();
+                Long data = (Long) literalWrapper.getData();
                 builder.append(':').append(data).append("\r\n");
             }
 
             if (literalWrapper.isTypeOf(Type.BULK)) {
-                byte[] data = literalWrapper.getData();
+                byte[] data = (byte[]) literalWrapper.getData();
                 if (data == null) {
                     builder.append('$').append(-1).append("\r\n");
                 } else {
@@ -116,7 +116,8 @@ public class LiteralWrapper {
             }
 
             if (literalWrapper.isTypeOf(Type.MULTI)) {
-                List<LiteralWrapper> data = literalWrapper.getData();
+                @SuppressWarnings("unchecked")
+                List<LiteralWrapper<?>> data = (List<LiteralWrapper<?>>) literalWrapper.getData();
                 if (data == null) {
                     builder.append('*').append(-1).append("\r\n");
                 } else {
@@ -132,28 +133,28 @@ public class LiteralWrapper {
 
     public String toPlain() {
         StringBuilder builder = new StringBuilder();
-        Stack<LiteralWrapper> stack = new Stack<>();
+        Stack<LiteralWrapper<?>> stack = new Stack<>();
         stack.push(this);
 
         while (!stack.isEmpty()) {
-            LiteralWrapper literalWrapper = stack.pop();
+            LiteralWrapper<?> literalWrapper = stack.pop();
             if (literalWrapper.isTypeOf(Type.SINGLE)) {
-                String data = literalWrapper.getData();
+                String data = (String) literalWrapper.getData();
                 builder.insert(0, "\r\n").insert(0, data);
             }
 
             if (literalWrapper.isTypeOf(Type.ERROR)) {
-                String data = literalWrapper.getData();
+                String data = (String) literalWrapper.getData();
                 builder.insert(0, "\r\n").insert(0, data);
             }
 
             if (literalWrapper.isTypeOf(Type.INTEGER)) {
-                Integer data = literalWrapper.getData();
+                Long data = (Long) literalWrapper.getData();
                 builder.insert(0, "\r\n").insert(0, data);
             }
 
             if (literalWrapper.isTypeOf(Type.BULK)) {
-                byte[] data = literalWrapper.getData();
+                byte[] data = (byte[]) literalWrapper.getData();
                 if (data == null) {
                     builder.insert(0, "\r\n").insert(0, "nil");
                 } else {
@@ -162,7 +163,8 @@ public class LiteralWrapper {
             }
 
             if (literalWrapper.isTypeOf(Type.MULTI)) {
-                List<LiteralWrapper> data = literalWrapper.getData();
+                @SuppressWarnings("unchecked")
+                List<LiteralWrapper<?>> data = (List<LiteralWrapper<?>>) literalWrapper.getData();
                 if (data == null) {
                     builder.insert(0, "\r\n").insert(0, "nil");
                 } else {
