@@ -56,7 +56,7 @@ public class GenericClientOperation implements Operation {
     }
 
     private Class<?>[] getParameterTypes(String method) {
-        if ("get".equals(method)) {
+        if ("get".equals(method) || "ttl".equals(method) || "ttlAt".equals(method)) {
             return new Class[]{String.class};
         }
         //todo 添加其他命令执行参数

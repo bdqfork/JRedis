@@ -28,7 +28,6 @@ public class ServerValueOperation extends AbstractServerOperation implements Val
 
     @Override
     public void set(String key, Object value, long expire, TimeUnit timeUnit) {
-
     }
 
     @SuppressWarnings("unchecked")
@@ -39,12 +38,24 @@ public class ServerValueOperation extends AbstractServerOperation implements Val
 
     @Override
     public Long ttl(String key) {
-        return null;
+        return (Long) execute(database -> {
+            Long ttl = database.ttl(key);
+            if (ttl == null) {
+                ttl = -1L;
+            }
+            return ttl;
+        });
     }
 
     @Override
     public Long ttlAt(String key) {
-        return null;
+        return (Long) execute(database -> {
+            Long ttlAt = database.ttlAt(key);
+            if (ttlAt == null) {
+                ttlAt = -1L;
+            }
+            return ttlAt;
+        });
     }
 
 }

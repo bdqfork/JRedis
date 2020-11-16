@@ -100,7 +100,7 @@ public class LiteralWrapper {
             }
 
             if (literalWrapper.isTypeOf(Type.INTEGER)) {
-                Integer data = literalWrapper.getData();
+                Number data = literalWrapper.getData();
                 builder.append(':').append(data).append("\r\n");
             }
 
