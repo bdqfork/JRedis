@@ -14,7 +14,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author bdq
@@ -54,11 +56,8 @@ public class GenericServerOperation extends AbstractServerOperation {
         //todo set方法执行时，返回值为空
         try {
             Method method = ReflectUtils.getMethod(operationClass, cmd, getParameterTypes(cmd));
-            LiteralWrapper result = (LiteralWrapper) method.invoke(operation, args);
-            if (result == null) {
-                result = LiteralWrapper.singleWrapper("OK");
-            }
-            return result;
+            Object result = method.invoke(operation, args);
+            return encodeResult(result);
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
             throw new JRedisException(e);
         }
@@ -73,6 +72,29 @@ public class GenericServerOperation extends AbstractServerOperation {
             return new Class[]{String.class, Object.class};
         }
         throw new IllegalCommandException(String.format("Illegal command %s", method));
+    }
+
+    protected LiteralWrapper encodeResult(Object result) {
+        LiteralWrapper literalWrapper = null;
+        if (result instanceof String) {
+            literalWrapper = LiteralWrapper.singleWrapper();
+        }
+        if (result instanceof Number) {
+            literalWrapper = LiteralWrapper.integerWrapper();
+        }
+        if (result instanceof byte[]) {
+            literalWrapper = LiteralWrapper.bulkWrapper();
+        }
+        if (result instanceof List) {
+            literalWrapper = LiteralWrapper.multiWrapper();
+            List<?> items = (List<?>) result;
+            result = items.stream().map(this::encodeResult).collect(Collectors.toList());
+        }
+        if (literalWrapper == null) {
+            literalWrapper = LiteralWrapper.bulkWrapper();
+        }
+        literalWrapper.setData(result);
+        return literalWrapper;
     }
 
 }

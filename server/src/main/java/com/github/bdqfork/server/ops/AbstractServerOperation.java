@@ -19,39 +19,15 @@ public class AbstractServerOperation implements ServerOperation {
     private Integer databaseId;
     private TransactionManager transactionManager;
 
-    protected LiteralWrapper execute(Command command) {
+    protected Object execute(Command command) {
         long transactionId = transactionManager.prepare(databaseId, command);
         try {
-            Object result = transactionManager.commit(transactionId);
-            return encodeResult(result);
+            return transactionManager.commit(transactionId);
         } catch (FailedTransactionException e) {
             log.error(e.getMessage(), e);
             transactionManager.rollback(transactionId);
             throw new JRedisException("Command error");
         }
-    }
-
-    protected LiteralWrapper encodeResult(Object result) {
-        LiteralWrapper literalWrapper = null;
-        if (result instanceof String) {
-            literalWrapper = LiteralWrapper.singleWrapper();
-        }
-        if (result instanceof Number) {
-            literalWrapper = LiteralWrapper.integerWrapper();
-        }
-        if (result instanceof byte[]) {
-            literalWrapper = LiteralWrapper.bulkWrapper();
-        }
-        if (result instanceof List) {
-            literalWrapper = LiteralWrapper.multiWrapper();
-            List<?> items = (List<?>) result;
-            result = items.stream().map(this::encodeResult).collect(Collectors.toList());
-        }
-        if (literalWrapper == null) {
-            literalWrapper = LiteralWrapper.bulkWrapper();
-        }
-        literalWrapper.setData(result);
-        return literalWrapper;
     }
 
     @Override
