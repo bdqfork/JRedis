@@ -3,9 +3,13 @@ package com.github.bdqfork.client.gui;
 import com.github.bdqfork.core.exception.IllegalCommandException;
 import com.github.bdqfork.client.ops.JRedisClient;
 import com.github.bdqfork.core.exception.JRedisException;
+import com.github.bdqfork.core.util.StringUtils;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * @author bdq
@@ -71,15 +75,19 @@ public class CommandLineClient {
     }
 
     private Object[] getArgs(String cmd, String[] lits) {
-        // todo: 需要进一步将数据进行类型转换
-        Object[] objs = Arrays.stream(lits).skip(1).toArray();
-        if ("set".equals(cmd) && objs.length > 1) {
-            try {
-                objs[1] = Long.parseLong((String) objs[1]);
-            } catch (NumberFormatException ignored) {
+        List<Object> args = Arrays.stream(lits).skip(1)
+                .map(lit -> StringUtils.isNumeric(lit) ? Long.parseLong(lit) : lit)
+                .collect(Collectors.toList());
+        if ("set".equals(cmd)) {
+            if (args.size() == 3) {
+                if (!(args.get(2) instanceof Long)) {
+                    throw new JRedisException("Command is invalid");
+                } else {
+                    args.add(TimeUnit.MILLISECONDS);
+                }
             }
         }
-        return objs;
+        return args.toArray();
     }
 
     private String getCmd(String[] lits) {

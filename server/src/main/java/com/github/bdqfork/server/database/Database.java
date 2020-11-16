@@ -38,10 +38,10 @@ public class Database {
      * @param key   键
      * @param value 值
      */
-    public void saveOrUpdate(String key, Object value, Long expireAt) {
+    public void saveOrUpdate(String key, Object value, Long expire) {
         dictMap.put(key, value);
-        if (expireAt > 0) {
-            Date date = DateUtils.getDateFromNow(expireAt, ChronoUnit.MILLIS);
+        if (expire > 0) {
+            Date date = DateUtils.getDateFromNow(expire, ChronoUnit.MILLIS);
             expireMap.put(key, date.getTime());
         }
     }

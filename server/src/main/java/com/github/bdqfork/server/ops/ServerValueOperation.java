@@ -1,8 +1,10 @@
 package com.github.bdqfork.server.ops;
 
 import com.github.bdqfork.core.operation.ValueOperation;
+import com.github.bdqfork.core.util.DateUtils;
 import com.github.bdqfork.server.database.Database;
 
+import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -28,6 +30,10 @@ public class ServerValueOperation extends AbstractServerOperation implements Val
 
     @Override
     public void set(String key, Object value, long expire, TimeUnit timeUnit) {
+        execute(database -> {
+            database.saveOrUpdate(key, value, expire);
+            return null;
+        });
     }
 
     @SuppressWarnings("unchecked")

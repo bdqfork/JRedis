@@ -11,6 +11,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author bdq
@@ -39,10 +40,11 @@ public class GenericClientOperation implements Operation {
             throw new IllegalCommandException(String.format("Illegal command %s", cmd));
         }
         Class<?> clazz = operations.get(cmd);
+        Class<?>[] parameterTypes = getParameterTypes(cmd, args);
         Operation instance = operationInstances.get(cmd);
         Method method;
         try {
-            method = clazz.getMethod(cmd, getParameterTypes(cmd));
+            method = clazz.getMethod(cmd, parameterTypes);
         } catch (NoSuchMethodException e) {
             throw new IllegalCommandException(String.format("Illegal command %s", cmd));
         }
@@ -55,14 +57,17 @@ public class GenericClientOperation implements Operation {
         }
     }
 
-    private Class<?>[] getParameterTypes(String method) {
-        if ("get".equals(method) || "ttl".equals(method) || "ttlAt".equals(method)) {
+    private Class<?>[] getParameterTypes(String cmd, Object[] args) {
+        if ("get".equals(cmd) || "ttl".equals(cmd) || "ttlAt".equals(cmd)) {
             return new Class[]{String.class};
         }
         //todo 添加其他命令执行参数
-        if ("set".equals(method)) {
+        if ("set".equals(cmd)) {
+            if (args.length == 4) {
+                return new Class[]{String.class, Object.class, long.class, TimeUnit.class};
+            }
             return new Class[]{String.class, Object.class};
         }
-        throw new IllegalCommandException(String.format("Illegal command %s", method));
+        throw new IllegalCommandException(String.format("Illegal command %s", cmd));
     }
 }

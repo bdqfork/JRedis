@@ -13,9 +13,11 @@ import com.github.bdqfork.core.serializtion.Serializer;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author bdq
@@ -40,8 +42,9 @@ public class OperationHandler implements InvocationHandler {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Exception {
-        String methodName = method.getName();
-        OperationContext operationContext = new OperationContext(databaseId, methodName, serialize(methodName, args));
+        String cmd = method.getName();
+        Object[] cmdArgs = getCmdArgs(cmd, args);
+        OperationContext operationContext = new OperationContext(databaseId, cmd, serialize(cmd, cmdArgs));
 
         CommandFuture commandFuture = new CommandFuture();
         operationContext.setResultFuture(commandFuture);
@@ -52,9 +55,9 @@ public class OperationHandler implements InvocationHandler {
             throw new JRedisException(e);
         }
 
-        String cmd = encode(operationContext);
+        String msg = encode(operationContext);
 
-        nettyChannel.send(cmd);
+        nettyChannel.send(msg);
 
         try {
             LiteralWrapper<?> literalWrapper = (LiteralWrapper<?>) commandFuture.get();
@@ -67,6 +70,21 @@ public class OperationHandler implements InvocationHandler {
         } catch (InterruptedException | ExecutionException | SerializeException e) {
             throw new JRedisException(e);
         }
+    }
+
+    private Object[] getCmdArgs(String cmd, Object[] args) {
+        if ("set".equals(cmd) && args.length == 4) {
+            if (args[3] instanceof TimeUnit) {
+                Long expire = (Long) args[2];
+                TimeUnit timeUnit = (TimeUnit) args[3];
+                if (timeUnit == TimeUnit.SECONDS) {
+                    expire *= 1000;
+                }
+                args[2] = expire;
+            }
+            return Arrays.stream(args).limit(args.length - 1).toArray();
+        }
+        return args;
     }
 
     private Object[] serialize(String method, Object[] args) throws SerializeException {

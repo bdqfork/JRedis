@@ -16,6 +16,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -44,57 +45,69 @@ public class GenericServerOperation extends AbstractServerOperation {
         });
     }
 
-    public LiteralWrapper execute(String cmd, Object... args) throws JRedisException {
+    public LiteralWrapper<?> execute(String cmd, Object... args) throws JRedisException {
 
         if (!operations.containsKey(cmd)) {
-            throw new JRedisException("Illegal command");
+            throw new IllegalCommandException("Illegal command");
         }
 
         Class<?> operationClass = operations.get(cmd);
+        Object[] methodArgs = getMethodArgs(cmd, args);
+        Class<?>[] parameterTypes = getParameterTypes(cmd, args);
         Operation operation = operationInstances.get(cmd);
 
         //todo set方法执行时，返回值为空
         try {
-            Method method = ReflectUtils.getMethod(operationClass, cmd, getParameterTypes(cmd));
-            Object result = method.invoke(operation, args);
+            Method method = ReflectUtils.getMethod(operationClass, cmd, parameterTypes);
+            Object result = method.invoke(operation, methodArgs);
             return encodeResult(result);
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
             throw new JRedisException(e);
         }
     }
 
-    private Class<?>[] getParameterTypes(String method) {
-        if ("get".equals(method) || "ttl".equals(method) || "ttlAt".equals(method)) {
+    private Object[] getMethodArgs(String cmd, Object[] args) {
+        if ("set".equals(cmd)) {
+            if (args.length == 3) {
+                args = Arrays.copyOf(args, args.length + 1);
+                args[3] = TimeUnit.MILLISECONDS;
+            }
+        }
+        return args;
+    }
+
+    private Class<?>[] getParameterTypes(String cmd, Object[] args) {
+        if ("get".equals(cmd) || "ttl".equals(cmd) || "ttlAt".equals(cmd)) {
             return new Class[]{String.class};
         }
 
-        if ("set".equals(method)) {
+        if ("set".equals(cmd)) {
+            if (args.length == 3) {
+                return new Class[]{String.class, Object.class, long.class, TimeUnit.class};
+            }
             return new Class[]{String.class, Object.class};
         }
-        throw new IllegalCommandException(String.format("Illegal command %s", method));
+        throw new IllegalCommandException(String.format("Illegal command %s", cmd));
     }
 
-    protected LiteralWrapper encodeResult(Object result) {
-        LiteralWrapper literalWrapper = null;
+    protected LiteralWrapper<?> encodeResult(Object result) {
+        LiteralWrapper<?> literalWrapper = null;
         if (result instanceof String) {
-            literalWrapper = LiteralWrapper.singleWrapper();
+            return LiteralWrapper.singleWrapper((String) result);
         }
-        if (result instanceof Number) {
-            literalWrapper = LiteralWrapper.integerWrapper();
+        if (result instanceof Long) {
+            return LiteralWrapper.integerWrapper((Number) result);
         }
         if (result instanceof byte[]) {
-            literalWrapper = LiteralWrapper.bulkWrapper();
+            return LiteralWrapper.bulkWrapper((byte[]) result);
         }
         if (result instanceof List) {
-            literalWrapper = LiteralWrapper.multiWrapper();
-            List<?> items = (List<?>) result;
-            result = items.stream().map(this::encodeResult).collect(Collectors.toList());
+            @SuppressWarnings("unchecked")
+            List<LiteralWrapper<?>> items = (List<LiteralWrapper<?>>) result;
+            items = items.stream().map(this::encodeResult).collect(Collectors.toList());
+            return LiteralWrapper.multiWrapper(items);
         }
-        if (literalWrapper == null) {
-            literalWrapper = LiteralWrapper.bulkWrapper();
-        }
-        literalWrapper.setData(result);
-        return literalWrapper;
+        return LiteralWrapper.bulkWrapper();
     }
 
 }
