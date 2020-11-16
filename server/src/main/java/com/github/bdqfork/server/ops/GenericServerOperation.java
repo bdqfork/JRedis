@@ -56,7 +56,6 @@ public class GenericServerOperation extends AbstractServerOperation {
         Class<?>[] parameterTypes = getParameterTypes(cmd, args);
         Operation operation = operationInstances.get(cmd);
 
-        //todo set方法执行时，返回值为空
         try {
             Method method = ReflectUtils.getMethod(operationClass, cmd, parameterTypes);
             Object result = method.invoke(operation, methodArgs);

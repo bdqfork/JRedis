@@ -78,8 +78,20 @@ public class OperationHandler implements InvocationHandler {
                 Long expire = (Long) args[2];
                 TimeUnit timeUnit = (TimeUnit) args[3];
                 // todo: 其他单位的转换
+                if (timeUnit == TimeUnit.MICROSECONDS) {
+                    expire /= 1000;
+                }
                 if (timeUnit == TimeUnit.SECONDS) {
                     expire *= 1000;
+                }
+                if (timeUnit == TimeUnit.MINUTES) {
+                    expire *= 1000 * 60;
+                }
+                if (timeUnit == TimeUnit.HOURS) {
+                    expire *= 1000 * 60 * 60;
+                }
+                if (timeUnit == TimeUnit.DAYS) {
+                    expire *= 1000 * 60 * 60 * 24;
                 }
                 args[2] = expire;
             }
