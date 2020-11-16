@@ -56,18 +56,18 @@ public class Database {
         if (!dictMap.containsKey(key)) {
             return null;
         }
-        Long ttl = ttl(key);
-        if (ttl == null || ttl > 0) {
+        if (ttl(key) > 0) {
             return dictMap.get(key);
         } else {
-            dictMap.remove(key);
-            expireMap.remove(key);
             return null;
         }
     }
 
     /**
-     * 查询数据剩余过期时间
+     * 查询数据剩余过期时间，
+     * 如果key不存在，返回-1，
+     * 如果key存在，且已经过期，返回-2，
+     * 否则返回剩余时间
      *
      * @param key 键
      */
@@ -76,23 +76,23 @@ public class Database {
             long ttl = expireMap.get(key) - System.currentTimeMillis();
             if (ttl <= 0) {
                 expireMap.remove(key);
-                return null;
+                return -2L;
             }
             return ttl;
         } else {
-            return null;
+            return -1L;
         }
     }
 
     /**
-     * 查询数据过期时间
+     * 查询数据过期时间，-1表示查询的数据已经过期或者不存在
      *
      * @param key 键
      */
     public Long ttlAt(String key) {
-        if (expireMap.containsKey(key) && expireMap.get(key) - System.currentTimeMillis() <= 0) {
-            expireMap.remove(key);
+        if (ttl(key) > 0) {
+            return expireMap.get(key);
         }
-        return expireMap.get(key);
+        return -1L;
     }
 }
