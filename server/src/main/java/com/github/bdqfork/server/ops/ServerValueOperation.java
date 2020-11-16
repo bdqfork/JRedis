@@ -44,7 +44,10 @@ public class ServerValueOperation extends AbstractServerOperation implements Val
 
     @Override
     public void del(String key) {
-
+        execute(database -> {
+            database.delete(key);
+            return null;
+        });
     }
 
     @Override

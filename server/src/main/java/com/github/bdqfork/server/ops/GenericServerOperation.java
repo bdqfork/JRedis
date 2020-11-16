@@ -76,7 +76,7 @@ public class GenericServerOperation extends AbstractServerOperation {
     }
 
     private Class<?>[] getParameterTypes(String cmd, Object[] args) {
-        if ("get".equals(cmd) || "ttl".equals(cmd) || "ttlAt".equals(cmd)) {
+        if ("get".equals(cmd) || "ttl".equals(cmd) || "ttlAt".equals(cmd) || "del".equals(cmd)) {
             return new Class[]{String.class};
         }
 

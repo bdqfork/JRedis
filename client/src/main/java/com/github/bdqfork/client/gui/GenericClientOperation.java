@@ -58,7 +58,7 @@ public class GenericClientOperation implements Operation {
     }
 
     private Class<?>[] getParameterTypes(String cmd, Object[] args) {
-        if ("get".equals(cmd) || "ttl".equals(cmd) || "ttlAt".equals(cmd)) {
+        if ("get".equals(cmd) || "ttl".equals(cmd) || "ttlAt".equals(cmd) || "del".equals(cmd)) {
             return new Class[]{String.class};
         }
         //todo 添加其他命令执行参数
