@@ -31,7 +31,12 @@ public class CommandLineClient {
     }
 
     public void run() {
-        jRedisClient.connect();
+        try {
+            jRedisClient.connect();
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+            System.exit(0);
+        }
         operation.reset(jRedisClient);
 
         Scanner scanner = new Scanner(System.in);

@@ -56,7 +56,7 @@ public class Database {
         if (!dictMap.containsKey(key)) {
             return null;
         }
-        if (ttl(key) > 0) {
+        if (ttl(key) == -1 || ttl(key) > 0) {
             return dictMap.get(key);
         } else {
             return null;
