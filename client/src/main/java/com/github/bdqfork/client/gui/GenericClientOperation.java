@@ -52,8 +52,6 @@ public class GenericClientOperation implements Operation {
             return method.invoke(instance, args);
         } catch (IllegalAccessException | InvocationTargetException e) {
             throw new JRedisException(e);
-        } catch (Throwable e) {
-            throw e.getCause();
         }
     }
 

@@ -46,19 +46,25 @@ public class CommandLineClient {
                 continue;
             }
             String cmd = getCmd(lits);
-            Object[] args = getArgs(cmd, lits);
+            Object[] args;
+            try {
+                args = getArgs(cmd, lits);
+            } catch (Exception e) {
+                System.out.println("Error: " + e.getMessage());
+                continue;
+            }
 
             Object result = null;
             try {
                 result = operation.execute(cmd, args);
             } catch (IllegalCommandException e) {
-                System.out.println(e.getMessage());
+                System.out.println("Error: " + e.getMessage());
                 continue;
             } catch (JRedisException e) {
-                System.out.println("Error " + e.getMessage());
+                System.out.println("Error: " + e.getMessage());
                 System.exit(0);
             } catch (Throwable e) {
-                System.out.println("Error " + e.getMessage());
+                System.out.println("Error: " + e.getMessage());
                 continue;
             }
 

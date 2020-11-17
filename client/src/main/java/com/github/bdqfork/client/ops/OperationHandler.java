@@ -61,11 +61,9 @@ public class OperationHandler implements InvocationHandler {
 
         try {
             LiteralWrapper<?> literalWrapper = (LiteralWrapper<?>) commandFuture.get();
-
             if (literalWrapper.isTypeOf(Type.BULK) && literalWrapper.getData() != null) {
                 return serializer.deserialize((byte[]) literalWrapper.getData(), Object.class);
             }
-
             return literalWrapper.getData();
         } catch (InterruptedException | ExecutionException | SerializeException e) {
             throw new JRedisException(e);
