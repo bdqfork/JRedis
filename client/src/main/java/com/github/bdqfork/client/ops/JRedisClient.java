@@ -1,6 +1,7 @@
 package com.github.bdqfork.client.ops;
 
 import com.github.bdqfork.client.netty.NettyChannel;
+import com.github.bdqfork.core.operation.KeyOperation;
 import com.github.bdqfork.core.operation.OperationContext;
 import com.github.bdqfork.core.operation.ValueOperation;
 import com.github.bdqfork.core.proxy.javassist.Proxy;
@@ -33,6 +34,11 @@ public class JRedisClient {
     public synchronized ValueOperation OpsForValue() {
         return (ValueOperation) Proxy.newProxyInstance(ValueOperation.class.getClassLoader(),
                 new Class[]{ValueOperation.class}, new OperationHandler(databaseId, nettyChannel, queue));
+    }
+
+    public synchronized KeyOperation OpsForKey() {
+        return (KeyOperation) Proxy.newProxyInstance(KeyOperation.class.getClassLoader(),
+                new Class[]{KeyOperation.class}, new OperationHandler(databaseId, nettyChannel, queue));
     }
 
     public void close() {
