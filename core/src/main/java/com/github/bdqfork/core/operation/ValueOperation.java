@@ -81,11 +81,18 @@ public interface ValueOperation extends Operation {
     /**
      * 给一个键添加或者更新过期时间
      *
-     * @param key      键
-     * @param expire   过期时间
-     * @param timeUnit 单位
+     * @param key    键
+     * @param expire 过期时间，单位秒
      */
-    void expire(String key, long expire, TimeUnit timeUnit);
+    void expire(String key, long expire);
+
+    /**
+     * 给一个键添加或者更新过期时间
+     *
+     * @param key      键
+     * @param expireAt unixTime
+     */
+    void expireAt(String key, long expireAt);
 
     /**
      * 返回剩余过期时间

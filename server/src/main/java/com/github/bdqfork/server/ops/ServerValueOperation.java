@@ -71,7 +71,12 @@ public class ServerValueOperation extends AbstractServerOperation implements Val
     }
 
     @Override
-    public void expire(String key, long expire, TimeUnit timeUnit) {
+    public void expire(String key, long expire) {
+
+    }
+
+    @Override
+    public void expireAt(String key, long expireAt) {
 
     }
 
