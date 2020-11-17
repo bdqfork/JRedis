@@ -36,6 +36,26 @@ public class ServerValueOperation extends AbstractServerOperation implements Val
         });
     }
 
+    @Override
+    public void setex(String key, Object value, long expire) {
+
+    }
+
+    @Override
+    public void setpx(String key, Object value, long expire) {
+
+    }
+
+    @Override
+    public boolean setnx(String key, Object value) {
+        return false;
+    }
+
+    @Override
+    public boolean setxx(String key, Object value) {
+        return false;
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public <T> T get(String key) {
@@ -48,6 +68,11 @@ public class ServerValueOperation extends AbstractServerOperation implements Val
             database.delete(key);
             return null;
         });
+    }
+
+    @Override
+    public void expire(String key, long expire, TimeUnit timeUnit) {
+
     }
 
     @Override
