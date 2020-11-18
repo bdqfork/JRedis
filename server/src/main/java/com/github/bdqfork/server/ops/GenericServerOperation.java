@@ -8,7 +8,6 @@ import com.github.bdqfork.core.operation.ValueOperation;
 import com.github.bdqfork.core.protocol.LiteralWrapper;
 import com.github.bdqfork.core.util.ReflectUtils;
 import com.github.bdqfork.server.transaction.TransactionManager;
-import com.sun.org.apache.xpath.internal.objects.XBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
