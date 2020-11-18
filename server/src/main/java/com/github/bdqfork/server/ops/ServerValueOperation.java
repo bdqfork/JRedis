@@ -39,22 +39,40 @@ public class ServerValueOperation extends AbstractServerOperation implements Val
     //todo set方法实现
     @Override
     public void setex(String key, Object value, long expire) {
-
+        execute(database -> {
+            database.saveOrUpdate(key, value, expire * 1000);
+            return null;
+        });
     }
 
     @Override
     public void setpx(String key, Object value, long expire) {
-
+        execute(database -> {
+            database.saveOrUpdate(key, value, expire);
+            return null;
+        });
     }
 
     @Override
     public boolean setnx(String key, Object value) {
-        return false;
+        return (boolean) execute(database -> {
+            if (database.get(key) == null) {
+                database.saveOrUpdate(key, value, -1L);
+                return true;
+            }
+            return false;
+        });
     }
 
     @Override
     public boolean setxx(String key, Object value) {
-        return false;
+        return (boolean) execute(database -> {
+            if (database.get(key) != null) {
+                database.saveOrUpdate(key, value, -1L);
+                return true;
+            }
+            return false;
+        });
     }
 
     @SuppressWarnings("unchecked")

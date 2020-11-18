@@ -8,6 +8,7 @@ import com.github.bdqfork.core.operation.ValueOperation;
 import com.github.bdqfork.core.protocol.LiteralWrapper;
 import com.github.bdqfork.core.util.ReflectUtils;
 import com.github.bdqfork.server.transaction.TransactionManager;
+import com.sun.org.apache.xpath.internal.objects.XBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -96,11 +97,14 @@ public class GenericServerOperation extends AbstractServerOperation {
             return new Class[]{String.class};
         }
 
-        if ("set".equals(cmd)) {
-            if (args.length == 3) {
+        if ("set".equals(cmd) || "setnx".equals(cmd) || "setxx".equals(cmd)) {
+            if (args.length == 4) {
                 return new Class[]{String.class, Object.class, long.class, TimeUnit.class};
             }
             return new Class[]{String.class, Object.class};
+        }
+        if ("setex".equals(cmd) || "setpx".equals(cmd)) {
+            return new Class[]{String.class, Object.class, long.class};
         }
         throw new IllegalCommandException(String.format("Illegal command %s", cmd));
     }
@@ -110,8 +114,11 @@ public class GenericServerOperation extends AbstractServerOperation {
         if (result instanceof String) {
             return LiteralWrapper.singleWrapper((String) result);
         }
-        if (result instanceof Long) {
+        if (result instanceof Long ) {
             return LiteralWrapper.integerWrapper((Number) result);
+        }
+        if (result instanceof Boolean) {
+            return LiteralWrapper.integerWrapper((Boolean) result ?1L:0L);
         }
         if (result instanceof byte[]) {
             return LiteralWrapper.bulkWrapper((byte[]) result);

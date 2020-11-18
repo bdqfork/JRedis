@@ -76,7 +76,7 @@ public class Dispatcher {
 
         CommandFuture commandFuture = operationContext.getResultFuture();
         try {
-            LiteralWrapper literalWrapper = genericServerOperation.execute(cmd, args);
+            LiteralWrapper<?> literalWrapper = genericServerOperation.execute(cmd, args);
             commandFuture.complete(literalWrapper);
         } catch (JRedisException e) {
             commandFuture.completeExceptionally(e);

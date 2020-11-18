@@ -72,11 +72,14 @@ public class GenericClientOperation implements Operation {
             return new Class[]{String.class};
         }
         //todo 添加其他命令执行参数
-        if ("set".equals(cmd)) {
+        if ("set".equals(cmd) || "setnx".equals(cmd) || "setxx".equals(cmd)) {
             if (args.length == 4) {
                 return new Class[]{String.class, Object.class, long.class, TimeUnit.class};
             }
             return new Class[]{String.class, Object.class};
+        }
+        if ("setex".equals(cmd) || "setpx".equals(cmd)) {
+            return new Class[]{String.class, Object.class, long.class};
         }
         throw new IllegalCommandException(String.format("Illegal command %s", cmd));
     }

@@ -89,6 +89,7 @@ public class CommandLineClient {
         List<Object> args = Arrays.stream(lits).skip(1)
                 .map(lit -> StringUtils.isNumeric(lit) ? Long.parseLong(lit) : lit)
                 .collect(Collectors.toList());
+        //todo set其他方法实现参数获取
         if ("set".equals(cmd)) {
             if (args.size() == 3) {
                 if (!(args.get(2) instanceof Long)) {

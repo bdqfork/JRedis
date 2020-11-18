@@ -64,10 +64,18 @@ public class OperationHandler implements InvocationHandler {
             if (literalWrapper.isTypeOf(Type.BULK) && literalWrapper.getData() != null) {
                 return serializer.deserialize((byte[]) literalWrapper.getData(), Object.class);
             }
-            return literalWrapper.getData();
+            Object result = literalWrapper.getData();
+            return parseResult(cmd,result);
         } catch (InterruptedException | ExecutionException | SerializeException e) {
             throw new JRedisException(e);
         }
+    }
+
+    private Object parseResult(String cmd, Object result) {
+        if ("setnx".equals(cmd) || "setxx".equals(cmd)) {
+            result = (Long) result == 1;
+        }
+        return result;
     }
 
     private Object[] getCmdArgs(String cmd, Object[] args) {
@@ -75,7 +83,6 @@ public class OperationHandler implements InvocationHandler {
             if (args[3] instanceof TimeUnit) {
                 Long expire = (Long) args[2];
                 TimeUnit timeUnit = (TimeUnit) args[3];
-                // todo: 其他单位的转换
                 if (timeUnit == TimeUnit.MICROSECONDS) {
                     expire /= 1000;
                 }
@@ -99,7 +106,8 @@ public class OperationHandler implements InvocationHandler {
     }
 
     private Object[] serialize(String method, Object[] args) throws SerializeException {
-        if ("set".equals(method)) {
+        if ("set".equals(method) || "setnx".equals(method) || "setpx".equals(method)
+            || "setxx".equals(method) || "setex".equals(method)) {
             args[1] = serializer.serialize(args[1]);
         }
         return args;
