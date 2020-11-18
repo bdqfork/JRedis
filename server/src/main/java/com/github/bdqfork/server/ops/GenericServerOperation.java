@@ -2,6 +2,7 @@ package com.github.bdqfork.server.ops;
 
 import com.github.bdqfork.core.exception.IllegalCommandException;
 import com.github.bdqfork.core.exception.JRedisException;
+import com.github.bdqfork.core.operation.KeyOperation;
 import com.github.bdqfork.core.operation.Operation;
 import com.github.bdqfork.core.operation.ValueOperation;
 import com.github.bdqfork.core.protocol.LiteralWrapper;
@@ -30,9 +31,24 @@ public class GenericServerOperation extends AbstractServerOperation {
     private final Map<String, Operation> operationInstances = new HashMap<>();
 
     private ServerValueOperation serverValueOperation;
+    private ServerKeyOperation serverKeyOperation;
 
     public GenericServerOperation(int databaseId, TransactionManager transactionManager) {
+        initKeyOperation(databaseId,transactionManager);
         initValueOperation(databaseId, transactionManager);
+    }
+
+    private void initKeyOperation(int databaseId, TransactionManager transactionManager) {
+        serverKeyOperation = new ServerKeyOperation();
+        serverKeyOperation.setDatabaseId(databaseId);
+        serverKeyOperation.setTransactionManager(transactionManager);
+        Arrays.stream(KeyOperation.class.getMethods())
+                .map(Method::getName)
+                .distinct()
+                .forEach(name -> {
+                    operations.put(name, KeyOperation.class);
+                    operationInstances.put(name, serverKeyOperation);
+                });
     }
 
     private void initValueOperation(int databaseId, TransactionManager transactionManager) {

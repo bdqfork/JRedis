@@ -3,6 +3,7 @@ package com.github.bdqfork.client.gui;
 import com.github.bdqfork.core.exception.IllegalCommandException;
 import com.github.bdqfork.client.ops.JRedisClient;
 import com.github.bdqfork.core.exception.JRedisException;
+import com.github.bdqfork.core.operation.KeyOperation;
 import com.github.bdqfork.core.operation.Operation;
 import com.github.bdqfork.core.operation.ValueOperation;
 
@@ -22,7 +23,18 @@ public class GenericClientOperation implements Operation {
     private final Map<String, Operation> operationInstances = new HashMap<>();
 
     public void reset(JRedisClient jRedisClient) {
+        initKeyOperation(jRedisClient);
         initValueOperation(jRedisClient);
+    }
+
+    private void initKeyOperation(JRedisClient jRedisClient) {
+        KeyOperation keyOperation = jRedisClient.OpsForKey();
+        Arrays.stream(KeyOperation.class.getMethods())
+                .map(Method::getName)
+                .forEach(name -> {
+                    operations.put(name, KeyOperation.class);
+                    operationInstances.put(name, keyOperation);
+                });
     }
 
     private void initValueOperation(JRedisClient jRedisClient) {
