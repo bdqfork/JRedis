@@ -99,7 +99,7 @@ public class CommandLineClient {
                 }
             }
         }
-        if (cmd.startsWith("set")) {
+        if (cmd.startsWith("set") && !(args.get(1) instanceof Long)) {
             args.set(1, getValueString((String) args.get(1)));
         }
         return args.toArray();
