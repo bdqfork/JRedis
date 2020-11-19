@@ -112,7 +112,7 @@ public class CommandLineClient {
     private String getValueString(String str) {
         if (!StringUtils.isNumeric(str)) {
             char[] chars = str.toCharArray();
-            if (chars[0] != '\"' && chars[chars.length - 1] != '\"') {
+            if (chars[0] != '\"' || chars[chars.length - 1] != '\"') {
                 throw new IllegalArgumentException("The string must be wrapped in double quotation marks");
             }
             StringBuilder builder = new StringBuilder();
