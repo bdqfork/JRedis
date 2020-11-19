@@ -69,7 +69,7 @@ public class GenericServerOperation extends AbstractServerOperation {
 
         Class<?> operationClass = operations.get(cmd);
         Object[] methodArgs = getMethodArgs(cmd, args);
-        Class<?>[] parameterTypes = getParameterTypes(cmd, args);
+        Class<?>[] parameterTypes = getParameterTypes(cmd, methodArgs);
         Operation operation = operationInstances.get(cmd);
 
         try {
