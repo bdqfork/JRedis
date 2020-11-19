@@ -109,7 +109,6 @@ public class GenericServerOperation extends AbstractServerOperation {
     }
 
     protected LiteralWrapper<?> encodeResult(Object result) {
-        LiteralWrapper<?> literalWrapper = null;
         if (result instanceof String) {
             return LiteralWrapper.singleWrapper((String) result);
         }
