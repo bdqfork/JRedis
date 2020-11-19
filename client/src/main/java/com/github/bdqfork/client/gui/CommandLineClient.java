@@ -99,6 +99,9 @@ public class CommandLineClient {
                 }
             }
         }
+        if (cmd.startsWith("set")) {
+            args.set(1, getValueString((String) args.get(1)));
+        }
         return args.toArray();
     }
 
@@ -106,4 +109,18 @@ public class CommandLineClient {
         return lits[0];
     }
 
+    private String getValueString(String str) {
+        if (!StringUtils.isNumeric(str)) {
+            char[] chars = str.toCharArray();
+            if (chars[0] != '\"' && chars[chars.length - 1] != '\"') {
+                throw new IllegalArgumentException("The string must be wrapped in double quotation marks");
+            }
+            StringBuilder builder = new StringBuilder();
+            for (int i = 1; i < chars.length - 1; i++) {
+                builder.append(chars[i]);
+            }
+            return builder.toString();
+        }
+        return str;
+    }
 }
