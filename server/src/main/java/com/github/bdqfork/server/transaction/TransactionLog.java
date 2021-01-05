@@ -1,6 +1,7 @@
 package com.github.bdqfork.server.transaction;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * @author bdq
@@ -8,7 +9,7 @@ import java.io.Serializable;
  */
 public class TransactionLog implements Serializable {
     private Long transactionId;
-    private RedoLog[] redoLogs;
+    private List<RedoLog> redoLogs;
 
     public Long getTransactionId() {
         return transactionId;
@@ -18,11 +19,11 @@ public class TransactionLog implements Serializable {
         this.transactionId = transactionId;
     }
 
-    public RedoLog[] getRedoLogs() {
+    public List<RedoLog> getRedoLogs() {
         return redoLogs;
     }
 
-    public void setRedoLogs(RedoLog[] redoLogs) {
+    public void setRedoLogs(List<RedoLog> redoLogs) {
         this.redoLogs = redoLogs;
     }
 }

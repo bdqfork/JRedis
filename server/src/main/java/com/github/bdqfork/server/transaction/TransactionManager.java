@@ -1,14 +1,17 @@
 package com.github.bdqfork.server.transaction;
 
 import com.github.bdqfork.core.exception.TransactionException;
+import com.github.bdqfork.server.config.Configuration;
 import com.github.bdqfork.server.ops.Command;
 import com.github.bdqfork.server.ops.UpdateCommand;
 import com.github.bdqfork.server.database.Database;
 import com.github.bdqfork.server.transaction.backup.BackupStrategy;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -74,6 +77,7 @@ public class TransactionManager {
 
             backup(transaction);
         } else {
+            //todo 删除操作日志
             result = command.execute(databases.get(databaseId));
         }
 
@@ -105,7 +109,7 @@ public class TransactionManager {
     private void backup(Transaction transaction) {
         TransactionLog transactionLog = new TransactionLog();
         transactionLog.setTransactionId(transaction.getTransactionId());
-        transactionLog.setRedoLogs(transactionLog.getRedoLogs());
+        transactionLog.setRedoLogs(transaction.getRedoLogs());
         strategy.backup(transactionLog);
     }
 
@@ -141,4 +145,5 @@ public class TransactionManager {
         return redoLog;
     }
 
+    //todo 重写日志操作
 }

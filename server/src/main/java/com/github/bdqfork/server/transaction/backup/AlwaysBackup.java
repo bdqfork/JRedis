@@ -3,11 +3,11 @@ package com.github.bdqfork.server.transaction.backup;
 import com.github.bdqfork.core.exception.SerializeException;
 import com.github.bdqfork.server.transaction.TransactionLog;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 
 /**
@@ -34,11 +34,11 @@ public class AlwaysBackup extends AbstractBackupStrategy {
             while (!transactionLogs.isEmpty()) {
                 TransactionLog transactionLog = transactionLogs.poll();
 
-                fileOutputStream.write("begin".getBytes(StandardCharsets.UTF_8));
+//                fileOutputStream.write("begin".getBytes(StandardCharsets.UTF_8));
 
                 byte[] data = getSerializer().serialize(transactionLog);
-                int size = data.length;
-                fileOutputStream.write(size);
+//                int size = data.length;
+//                fileOutputStream.write(size);
                 fileOutputStream.write(data);
             }
             fileOutputStream.flush();

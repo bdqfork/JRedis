@@ -26,6 +26,10 @@ public class RedoLog implements Serializable {
      */
     private Object value;
     /**
+     * 操作类型
+     */
+    //todo 操作类型枚举类
+    /**
      * 过期时间
      */
     private Long expireAt;
