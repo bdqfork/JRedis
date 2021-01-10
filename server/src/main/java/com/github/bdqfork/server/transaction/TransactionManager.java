@@ -27,7 +27,7 @@ public class TransactionManager {
     public TransactionManager(BackupStrategy strategy, List<Database> databases) {
         this.strategy = strategy;
         this.databases = new ArrayList<>(databases);
-        strategy.redo(databases, transactionMap);
+        strategy.redo(databases);
     }
 
     private static Long newId() {
