@@ -71,6 +71,7 @@ public class TransactionManager {
 
             RedoLog redoLog = createRedoLog(databaseId, updateOperation.getKey(), OperationType.UPDATE);
             transaction.addRedoLog(redoLog);
+            backup(transaction);
         }
         else if (command instanceof DeleteCommand) {
             DeleteCommand deleteCommand = (DeleteCommand) command;
@@ -83,12 +84,12 @@ public class TransactionManager {
 
             RedoLog redoLog = createRedoLog(databaseId, deleteCommand.getKey(), OperationType.DELETE);
             transaction.addRedoLog(redoLog);
+            backup(transaction);
         }
         else {
             result = command.execute(databases.get(databaseId));
         }
 
-        backup(transaction);
         return result;
     }
 
