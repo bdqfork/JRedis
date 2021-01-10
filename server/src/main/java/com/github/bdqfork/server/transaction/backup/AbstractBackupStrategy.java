@@ -58,8 +58,8 @@ public abstract class AbstractBackupStrategy implements BackupStrategy {
     }
 
     @Override
-    public void redo(List<Database> databases, Map<Long, Transaction> transactionMap) {
-        doRedo(databases, transactionMap);
+    public void redo(List<Database> databases) {
+        doRedo(databases);
     }
 
     public void setSerializer(Serializer serializer) {
@@ -80,5 +80,5 @@ public abstract class AbstractBackupStrategy implements BackupStrategy {
 
     protected abstract void doBackup();
 
-    protected abstract void doRedo(List<Database> databases, Map<Long, Transaction> transactionMap);
+    protected abstract void doRedo(List<Database> databases);
 }

@@ -16,5 +16,5 @@ import java.util.Map;
 public interface BackupStrategy {
     void backup(TransactionLog transactionLog);
 
-    void redo(List<Database> databases, Map<Long, Transaction> transactionMap);
+    void redo(List<Database> databases);
 }

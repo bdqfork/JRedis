@@ -4,7 +4,6 @@ import com.github.bdqfork.core.exception.SerializeException;
 import com.github.bdqfork.server.database.Database;
 import com.github.bdqfork.server.transaction.OperationType;
 import com.github.bdqfork.server.transaction.RedoLog;
-import com.github.bdqfork.server.transaction.Transaction;
 import com.github.bdqfork.server.transaction.TransactionLog;
 
 import java.io.*;
@@ -48,7 +47,7 @@ public class AlwaysBackup extends AbstractBackupStrategy {
         }
     }
 
-    protected void doRedo(List<Database> databases, Map<Long, Transaction> transactionMap) {
+    protected void doRedo(List<Database> databases) {
         Queue<TransactionLog> transactionLogs = getTransactionLogsByRedoLog();
         if (transactionLogs == null) {
             return;
