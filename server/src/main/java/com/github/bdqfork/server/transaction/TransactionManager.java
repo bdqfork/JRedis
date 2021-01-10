@@ -2,13 +2,12 @@ package com.github.bdqfork.server.transaction;
 
 import com.github.bdqfork.core.exception.TransactionException;
 import com.github.bdqfork.server.ops.Command;
+import com.github.bdqfork.server.ops.DeleteCommand;
 import com.github.bdqfork.server.ops.UpdateCommand;
 import com.github.bdqfork.server.database.Database;
 import com.github.bdqfork.server.transaction.backup.BackupStrategy;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -28,6 +27,7 @@ public class TransactionManager {
     public TransactionManager(BackupStrategy strategy, List<Database> databases) {
         this.strategy = strategy;
         this.databases = new ArrayList<>(databases);
+        strategy.redo(databases);
     }
 
     private static Long newId() {
@@ -69,11 +69,24 @@ public class TransactionManager {
 
             result = command.execute(databases.get(databaseId));
 
-            RedoLog redoLog = createRedoLog(databaseId, updateOperation.getKey());
+            RedoLog redoLog = createRedoLog(databaseId, updateOperation.getKey(), OperationType.UPDATE);
             transaction.addRedoLog(redoLog);
-
             backup(transaction);
-        } else {
+        }
+        else if (command instanceof DeleteCommand) {
+            DeleteCommand deleteCommand = (DeleteCommand) command;
+            String key = deleteCommand.getKey();
+
+            UndoLog undoLog = createUndoLog(databaseId, key);
+            transaction.addUndoLog(undoLog);
+
+            result = command.execute(databases.get(databaseId));
+
+            RedoLog redoLog = createRedoLog(databaseId, deleteCommand.getKey(), OperationType.DELETE);
+            transaction.addRedoLog(redoLog);
+            backup(transaction);
+        }
+        else {
             result = command.execute(databases.get(databaseId));
         }
 
@@ -94,7 +107,7 @@ public class TransactionManager {
             Database database = databases.get(databaseId);
             database.saveOrUpdate(undoLog.getKey(), undoLog.getValue(), undoLog.getExpireAt());
 
-            RedoLog redoLog = createRedoLog(databaseId, undoLog.getKey());
+            RedoLog redoLog = createRedoLog(databaseId, undoLog.getKey(), OperationType.UPDATE);
             transaction.addRedoLog(redoLog);
         }
 
@@ -105,7 +118,7 @@ public class TransactionManager {
     private void backup(Transaction transaction) {
         TransactionLog transactionLog = new TransactionLog();
         transactionLog.setTransactionId(transaction.getTransactionId());
-        transactionLog.setRedoLogs(transactionLog.getRedoLogs());
+        transactionLog.setRedoLogs(transaction.getRedoLogs());
         strategy.backup(transactionLog);
     }
 
@@ -125,7 +138,7 @@ public class TransactionManager {
         return undoLog;
     }
 
-    private RedoLog createRedoLog(int databaseId, String key) {
+    private RedoLog createRedoLog(int databaseId, String key, OperationType type) {
         Database database = databases.get(databaseId);
 
         Object value = database.get(key);
@@ -136,9 +149,9 @@ public class TransactionManager {
         redoLog.setKey(key);
         redoLog.setValue(value);
         // todo:设置datatype
+        redoLog.setOperationType(type);
         redoLog.setExpireAt(expireAt);
 
         return redoLog;
     }
-
 }

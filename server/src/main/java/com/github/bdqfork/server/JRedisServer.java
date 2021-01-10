@@ -13,9 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
@@ -80,6 +78,9 @@ public class JRedisServer {
         Properties properties = FileUtils.loadPropertiesFile(profilePath);
         this.configuration = new Configuration();
 
+        String redoLogPath = properties.getProperty("redoLogPath", Configuration.DEFAULT_CONFIG_FILE_PATH);
+        configuration.setRedoLogPath(redoLogPath);
+
         String host = properties.getProperty("host", Configuration.DEFAULT_CONFIG_HOST);
         configuration.setHost(host);
 
@@ -112,6 +113,5 @@ public class JRedisServer {
         for (int i = 1; i <= configuration.getDatabaseNumber(); i++) {
             databases.add(new Database());
         }
-        //todo 调用redo方法
     }
 }

@@ -26,9 +26,21 @@ public class RedoLog implements Serializable {
      */
     private Object value;
     /**
+     * 操作类型
+     */
+    private OperationType operationType;
+    /**
      * 过期时间
      */
     private Long expireAt;
+
+    public OperationType getOperationType() {
+        return operationType;
+    }
+
+    public void setOperationType(OperationType operationType) {
+        this.operationType = operationType;
+    }
 
     public void setDatabaseId(Integer databaseId) {
         this.databaseId = databaseId;

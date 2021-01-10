@@ -2,10 +2,14 @@ package com.github.bdqfork.server.transaction.backup;
 
 import com.github.bdqfork.core.serializtion.JdkSerializer;
 import com.github.bdqfork.core.serializtion.Serializer;
+import com.github.bdqfork.server.database.Database;
+import com.github.bdqfork.server.transaction.Transaction;
 import com.github.bdqfork.server.transaction.TransactionLog;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -53,6 +57,11 @@ public abstract class AbstractBackupStrategy implements BackupStrategy {
         }
     }
 
+    @Override
+    public void redo(List<Database> databases) {
+        doRedo(databases);
+    }
+
     public void setSerializer(Serializer serializer) {
         this.serializer = serializer;
     }
@@ -70,4 +79,6 @@ public abstract class AbstractBackupStrategy implements BackupStrategy {
     }
 
     protected abstract void doBackup();
+
+    protected abstract void doRedo(List<Database> databases);
 }

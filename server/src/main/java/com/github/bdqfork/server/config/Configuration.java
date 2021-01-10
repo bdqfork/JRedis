@@ -7,6 +7,7 @@ package com.github.bdqfork.server.config;
  * @since 2020/09/21
  */
 public class Configuration {
+    public static final String DEFAULT_CONFIG_REDO_LOG_PATH = "./jredis.log";
     public static final String DEFAULT_CONFIG_FILE_PATH = "jredis.conf";
     public static final String DEFAULT_CONFIG_DATABASES_NUMBER = "16";
     public static final String DEFAULT_CONFIG_SERIALIZER = "jdk";
@@ -29,6 +30,16 @@ public class Configuration {
     private String password;
 
     private Long timeout;
+
+    private String redoLogPath;
+
+    public String getRedoLogPath() {
+        return redoLogPath;
+    }
+
+    public void setRedoLogPath(String redoLogPath) {
+        this.redoLogPath = redoLogPath;
+    }
 
     public String getHost() {
         return host;
