@@ -1,14 +1,14 @@
 package com.github.bdqfork.server.transaction.backup;
 
 import com.github.bdqfork.core.exception.SerializeException;
+import com.github.bdqfork.server.database.Database;
+import com.github.bdqfork.server.transaction.OperationType;
+import com.github.bdqfork.server.transaction.RedoLog;
+import com.github.bdqfork.server.transaction.Transaction;
 import com.github.bdqfork.server.transaction.TransactionLog;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 
 /**
  * @author bdq
@@ -46,5 +46,56 @@ public class AlwaysBackup extends AbstractBackupStrategy {
         } catch (SerializeException | IOException e) {
             throw new IllegalStateException(e);
         }
+    }
+
+    protected void doRedo(List<Database> databases, Map<Long, Transaction> transactionMap) {
+        Queue<TransactionLog> transactionLogs = getTransactionLogsByRedoLog();
+        if (transactionLogs == null) {
+            return;
+        }
+        while (!transactionLogs.isEmpty()) {
+            TransactionLog transactionLog = transactionLogs.poll();
+            List<RedoLog> redoLogs = transactionLog.getRedoLogs();
+            for (RedoLog redoLog : redoLogs) {
+                int databaseId = redoLog.getDatabaseId();
+                Database database = databases.get(databaseId);
+                OperationType operationType = redoLog.getOperationType();
+                String key = redoLog.getKey();
+
+                if (operationType == OperationType.UPDATE) {
+                    Object value = redoLog.getValue();
+                    Long expireAt = redoLog.getExpireAt();
+                    database.saveOrUpdate(key, value, expireAt);
+                }
+
+                if (operationType == OperationType.DELETE) {
+                    database.delete(key);
+                }
+            }
+        }
+    }
+
+    private Queue<TransactionLog> getTransactionLogsByRedoLog() {
+        File file = new File(getLogFilePath());
+        FileInputStream fileInputStream;
+        ObjectInputStream objectInputStream;
+        Queue<TransactionLog> transactionLogs = new LinkedList<>();
+        try {
+            fileInputStream = new FileInputStream(file);
+            if (fileInputStream.available() <= 0) {
+                return null;
+            }
+            objectInputStream = new ObjectInputStream(fileInputStream);
+            while (fileInputStream.available() > 0) {
+                TransactionLog log = (TransactionLog) objectInputStream.readObject();
+                transactionLogs.offer(log);
+                byte[] buf = new byte[4];
+                fileInputStream.read(buf);
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            throw new IllegalStateException(e);
+        }
+
+        return transactionLogs;
     }
 }

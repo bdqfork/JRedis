@@ -6,17 +6,13 @@ import com.github.bdqfork.core.util.FileUtils;
 import com.github.bdqfork.server.config.Configuration;
 import com.github.bdqfork.server.database.Database;
 import com.github.bdqfork.server.netty.NettyServer;
-import com.github.bdqfork.server.transaction.TransactionLog;
 import com.github.bdqfork.server.transaction.TransactionManager;
 import com.github.bdqfork.server.transaction.backup.BackupStrategy;
 import com.github.bdqfork.server.transaction.backup.BackupStrategyFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -117,29 +113,5 @@ public class JRedisServer {
         for (int i = 1; i <= configuration.getDatabaseNumber(); i++) {
             databases.add(new Database());
         }
-        //todo 调用redo方法
-    }
-
-    /**
-     * 从redoLog恢复数据
-     */
-    private void redo() {
-        File file = new File(configuration.getRedoLogPath());
-        FileInputStream fileInputStream;
-        ObjectInputStream objectInputStream;
-        Queue<TransactionLog> transactionLogs = new LinkedList<>();
-        try {
-            fileInputStream = new FileInputStream(file);
-            objectInputStream = new ObjectInputStream(fileInputStream);
-            while (fileInputStream.available() > 0) {
-                TransactionLog log = (TransactionLog) objectInputStream.readObject();
-                transactionLogs.offer(log);
-                byte[] buf = new byte[4];
-                fileInputStream.read(buf);
-            }
-        } catch (IOException | ClassNotFoundException e ) {
-            throw new IllegalStateException(e);
-        }
-        //todo 提交事务日志的事务
     }
 }

@@ -1,6 +1,7 @@
 package com.github.bdqfork.server.ops;
 
 import com.github.bdqfork.core.operation.KeyOperation;
+import com.github.bdqfork.server.database.Database;
 
 /**
  * @author bdq
@@ -10,9 +11,17 @@ public class ServerKeyOperation extends AbstractServerOperation implements KeyOp
 
     @Override
     public void del(String key) {
-        execute(database -> {
-            database.delete(key);
-            return null;
+        execute(new DeleteCommand() {
+            @Override
+            public Object execute(Database database) {
+                database.delete(key);
+                return null;
+            }
+
+            @Override
+            public String getKey() {
+                return key;
+            }
         });
     }
 
