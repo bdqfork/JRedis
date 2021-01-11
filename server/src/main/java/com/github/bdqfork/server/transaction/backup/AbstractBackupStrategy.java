@@ -1,15 +1,18 @@
 package com.github.bdqfork.server.transaction.backup;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import com.github.bdqfork.core.serializtion.JdkSerializer;
 import com.github.bdqfork.core.serializtion.Serializer;
 import com.github.bdqfork.server.database.Database;
+import com.github.bdqfork.server.transaction.OperationType;
+import com.github.bdqfork.server.transaction.RedoLog;
 import com.github.bdqfork.server.transaction.TransactionLog;
 
 /**
@@ -18,7 +21,6 @@ import com.github.bdqfork.server.transaction.TransactionLog;
  */
 public abstract class AbstractBackupStrategy implements BackupStrategy {
     private static final String DEFAULT_LOG_FILE_PATH = "./jredis.log";
-    private final Lock lock = new ReentrantLock();
     private final String logFilePath;
     private Serializer serializer = new JdkSerializer();
     /**
@@ -44,19 +46,50 @@ public abstract class AbstractBackupStrategy implements BackupStrategy {
     }
 
     @Override
-    public void backup(TransactionLog transactionLog) {
-        transactionLogs.offer(transactionLog);
-        try {
-            lock.lock();
-            doBackup();
-        } finally {
-            lock.unlock();
+    public void redo(List<Database> databases) {
+        Queue<RedoLog> redoLogs = getRedoLogs();
+        while (!redoLogs.isEmpty()) {
+            RedoLog redoLog = redoLogs.poll();
+
+            int databaseId = redoLog.getDatabaseId();
+
+            Database database = databases.get(databaseId);
+
+            OperationType operationType = redoLog.getOperationType();
+
+            String key = redoLog.getKey();
+
+            if (operationType == OperationType.UPDATE) {
+                Object value = redoLog.getValue();
+                Long expireAt = redoLog.getExpireAt();
+                database.saveOrUpdate(key, value, expireAt);
+            }
+
+            if (operationType == OperationType.DELETE) {
+                database.delete(key);
+            }
         }
     }
 
-    @Override
-    public void redo(List<Database> databases) {
-        doRedo(databases);
+    private Queue<RedoLog> getRedoLogs() {
+        File file = new File(getLogFilePath());
+        if (file.length() == 0) {
+            return new LinkedList<>();
+        }
+        Queue<RedoLog> redoLogs = new LinkedList<>();
+        try (ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(file))) {
+            while (true) {
+                RedoLog log = (RedoLog) objectInputStream.readObject();
+                if (log == null) {
+                    break;
+                }
+                redoLogs.offer(log);
+            }
+            // TODO: 反序列化
+        } catch (IOException | ClassNotFoundException e) {
+            throw new IllegalStateException(e);
+        }
+        return redoLogs;
     }
 
     public void setSerializer(Serializer serializer) {
@@ -75,7 +108,4 @@ public abstract class AbstractBackupStrategy implements BackupStrategy {
         return transactionLogs;
     }
 
-    protected abstract void doBackup();
-
-    protected abstract void doRedo(List<Database> databases);
 }
