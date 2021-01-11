@@ -1,8 +1,10 @@
 package com.github.bdqfork.server.transaction.backup;
 
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.LinkedList;
 
 import com.github.bdqfork.core.exception.SerializeException;
@@ -25,10 +27,11 @@ public class AlwaysBackup extends AbstractBackupStrategy {
 
     @Override
     public void backup(TransactionLog transactionLog) {
-        try (FileOutputStream fileOutputStream = new FileOutputStream(new File(getLogFilePath()), true)) {
+        try (OutputStream outputStream = new FileOutputStream(new File(getLogFilePath()), true);
+                DataOutputStream dataOutputStream = new DataOutputStream(outputStream)) {
             byte[] data = getSerializer().serialize(transactionLog);
             // TODO: 序列化
-            fileOutputStream.flush();
+            dataOutputStream.flush();
         } catch (IOException | SerializeException e) {
             throw new IllegalStateException(e);
         }

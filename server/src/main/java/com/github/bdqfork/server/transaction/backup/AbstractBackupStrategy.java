@@ -1,9 +1,12 @@
 package com.github.bdqfork.server.transaction.backup;
 
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
+import java.io.OutputStream;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -77,9 +80,10 @@ public abstract class AbstractBackupStrategy implements BackupStrategy {
             return new LinkedList<>();
         }
         Queue<RedoLog> redoLogs = new LinkedList<>();
-        try (ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(file))) {
+        try (InputStream inputStream = new FileInputStream(file);
+                DataInputStream dataInputStream = new DataInputStream(inputStream)) {
             while (true) {
-                RedoLog log = (RedoLog) objectInputStream.readObject();
+                RedoLog log = null;
                 if (log == null) {
                     break;
                 }
