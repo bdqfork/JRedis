@@ -2,6 +2,7 @@ package com.github.bdqfork.server.ops;
 
 import com.github.bdqfork.core.operation.KeyOperation;
 import com.github.bdqfork.server.database.Database;
+import com.github.bdqfork.server.transaction.OperationType;
 
 /**
  * @author bdq
@@ -37,23 +38,49 @@ public class ServerKeyOperation extends AbstractServerOperation implements KeyOp
 
     @Override
     public Long ttl(String key) {
-        return (Long) execute(database -> {
-            Long ttl = database.ttl(key);
-            if (ttl == null) {
-                ttl = -1L;
+        return (Long) execute(new Command() {
+            @Override
+            public String getKey() {
+                return key;
             }
-            return ttl;
+
+            @Override
+            public Object execute(Database database) {
+                Long ttl = database.ttl(key);
+                if (ttl == null) {
+                    ttl = -1L;
+                }
+                return ttl;
+            }
+
+            @Override
+            public OperationType getOperationType() {
+                return null;
+            }
         });
     }
 
     @Override
     public Long ttlAt(String key) {
-        return (Long) execute(database -> {
-            Long ttlAt = database.ttlAt(key);
-            if (ttlAt == null) {
-                ttlAt = -1L;
+        return (Long) execute(new Command() {
+            @Override
+            public String getKey() {
+                return key;
             }
-            return ttlAt;
+
+            @Override
+            public Object execute(Database database) {
+                Long ttlAt = database.ttlAt(key);
+                if (ttlAt == null) {
+                    ttlAt = -1L;
+                }
+                return ttlAt;
+            }
+
+            @Override
+            public OperationType getOperationType() {
+                return null;
+            }
         });
     }
 }

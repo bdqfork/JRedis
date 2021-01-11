@@ -90,7 +90,7 @@ public abstract class AbstractBackupStrategy implements BackupStrategy {
                 redoLogs.offer(log);
             }
             // TODO: 反序列化
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (IOException e) {
             throw new IllegalStateException(e);
         }
         return redoLogs;

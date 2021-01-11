@@ -30,54 +30,104 @@ public class ServerValueOperation extends AbstractServerOperation implements Val
 
     @Override
     public void set(String key, Object value, long expire, TimeUnit timeUnit) {
-        execute(database -> {
-            database.saveOrUpdate(key, value, expire);
-            return null;
+        execute(new UpdateCommand() {
+            @Override
+            public String getKey() {
+                return key;
+            }
+
+            @Override
+            public Object execute(Database database) {
+                database.saveOrUpdate(key, value, expire);
+                return null;
+            }
         });
     }
 
     @Override
     public void setex(String key, Object value, long expire) {
-        execute(database -> {
-            database.saveOrUpdate(key, value, expire * 1000);
-            return null;
+        execute(new UpdateCommand() {
+            @Override
+            public String getKey() {
+                return key;
+            }
+
+            @Override
+            public Object execute(Database database) {
+                database.saveOrUpdate(key, value, expire * 1000);
+                return null;
+            }
         });
     }
 
     @Override
     public void setpx(String key, Object value, long expire) {
-        execute(database -> {
-            database.saveOrUpdate(key, value, expire);
-            return null;
+        execute(new UpdateCommand() {
+            @Override
+            public String getKey() {
+                return key;
+            }
+
+            @Override
+            public Object execute(Database database) {
+                database.saveOrUpdate(key, value, expire);
+                return null;
+            }
         });
     }
 
     @Override
     public boolean setnx(String key, Object value) {
-        return (boolean) execute(database -> {
-            if (database.get(key) == null) {
-                database.saveOrUpdate(key, value, -1L);
-                return true;
+        return (boolean) execute(new UpdateCommand() {
+            @Override
+            public String getKey() {
+                return key;
             }
-            return false;
+
+            @Override
+            public Object execute(Database database) {
+                if (database.get(key) == null) {
+                    database.saveOrUpdate(key, value, -1L);
+                    return true;
+                }
+                return false;
+            }
         });
     }
 
     @Override
     public boolean setxx(String key, Object value) {
-        return (boolean) execute(database -> {
-            if (database.get(key) != null) {
-                database.saveOrUpdate(key, value, -1L);
-                return true;
+        return (boolean) execute(new UpdateCommand() {
+            @Override
+            public String getKey() {
+                return key;
             }
-            return false;
+
+            @Override
+            public Object execute(Database database) {
+                if (database.get(key) != null) {
+                    database.saveOrUpdate(key, value, -1L);
+                    return true;
+                }
+                return false;
+            }
         });
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public <T> T get(String key) {
-        return (T) execute(database -> database.get(key));
+        return (T) execute(new UpdateCommand() {
+            @Override
+            public String getKey() {
+                return key;
+            }
+
+            @Override
+            public Object execute(Database database) {
+                return database.get(key);
+            }
+        });
     }
 
 }
