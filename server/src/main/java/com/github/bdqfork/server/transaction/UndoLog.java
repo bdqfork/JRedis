@@ -10,6 +10,10 @@ import java.io.Serializable;
  */
 public class UndoLog implements Serializable {
     /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
+    /**
      * 数据库id
      */
     private Integer databaseId;

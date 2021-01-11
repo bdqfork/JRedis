@@ -18,7 +18,6 @@ import java.util.concurrent.atomic.AtomicLong;
  * @since 2020/9/20
  */
 public class TransactionManager {
-    private static final String VERSION = "0.1";
     private static final AtomicLong ID_GENERATOR = new AtomicLong(0);
     private final Map<Long, Transaction> transactionMap = new ConcurrentHashMap<>(256);
     private final BackupStrategy strategy;
@@ -53,43 +52,26 @@ public class TransactionManager {
      * @return Object 事务执行结果
      */
     public Object commit(Long transactionId) throws TransactionException {
-        Object result = null;
-
         Transaction transaction = transactionMap.get(transactionId);
         int databaseId = transaction.getDatabaseId();
         Command command = transaction.getCommand();
+        return doCommit(transaction, databaseId, command);
+    }
 
-        if (command instanceof UpdateCommand) {
-            UpdateCommand updateOperation = (UpdateCommand) command;
-            String key = updateOperation.getKey();
+    private Object doCommit(Transaction transaction, int databaseId, Command command) {
 
-            UndoLog undoLog = createUndoLog(databaseId, key);
-
-            transaction.addUndoLog(undoLog);
-
-            result = command.execute(databases.get(databaseId));
-
-            RedoLog redoLog = createRedoLog(databaseId, updateOperation.getKey(), OperationType.UPDATE);
-            transaction.addRedoLog(redoLog);
-            backup(transaction);
-        }
-        else if (command instanceof DeleteCommand) {
-            DeleteCommand deleteCommand = (DeleteCommand) command;
-            String key = deleteCommand.getKey();
-
-            UndoLog undoLog = createUndoLog(databaseId, key);
-            transaction.addUndoLog(undoLog);
-
-            result = command.execute(databases.get(databaseId));
-
-            RedoLog redoLog = createRedoLog(databaseId, deleteCommand.getKey(), OperationType.DELETE);
-            transaction.addRedoLog(redoLog);
-            backup(transaction);
-        }
-        else {
-            result = command.execute(databases.get(databaseId));
+        if (!(command instanceof UpdateCommand) || !(command instanceof DeleteCommand)) {
+            return command.execute(databases.get(databaseId));
         }
 
+        UndoLog undoLog = createUndoLog(databaseId, command.getKey());
+        transaction.addUndoLog(undoLog);
+
+        Object result = command.execute(databases.get(databaseId));
+
+        RedoLog redoLog = createRedoLog(databaseId, command.getKey(), command.getOperationType());
+        transaction.addRedoLog(redoLog);
+        backup(transaction);
         return result;
     }
 
@@ -114,7 +96,6 @@ public class TransactionManager {
         backup(transaction);
     }
 
-
     private void backup(Transaction transaction) {
         TransactionLog transactionLog = new TransactionLog();
         transactionLog.setTransactionId(transaction.getTransactionId());
@@ -132,7 +113,6 @@ public class TransactionManager {
         undoLog.setDatabaseId(databaseId);
         undoLog.setKey(key);
         undoLog.setValue(value);
-        // todo:设置datatype
         undoLog.setExpireAt(expireAt);
 
         return undoLog;

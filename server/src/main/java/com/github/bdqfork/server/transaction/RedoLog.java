@@ -10,13 +10,13 @@ import java.io.Serializable;
  */
 public class RedoLog implements Serializable {
     /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
+    /**
      * 数据库id
      */
     private Integer databaseId;
-    /**
-     * 数据类型
-     */
-    private byte dataType;
     /**
      * key
      */
@@ -48,14 +48,6 @@ public class RedoLog implements Serializable {
 
     public Integer getDatabaseId() {
         return databaseId;
-    }
-
-    public byte getDataType() {
-        return dataType;
-    }
-
-    public void setDataType(byte dataType) {
-        this.dataType = dataType;
     }
 
     public String getKey() {

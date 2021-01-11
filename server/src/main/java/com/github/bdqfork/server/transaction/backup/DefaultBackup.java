@@ -1,57 +1,53 @@
 package com.github.bdqfork.server.transaction.backup;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+
 import com.github.bdqfork.core.exception.SerializeException;
 import com.github.bdqfork.server.database.Database;
 import com.github.bdqfork.server.transaction.OperationType;
 import com.github.bdqfork.server.transaction.RedoLog;
 import com.github.bdqfork.server.transaction.TransactionLog;
 
-import java.io.*;
-import java.util.*;
-
 /**
  * @author bdq
  * @since 2020/09/22
  */
-public class AlwaysBackup extends AbstractBackupStrategy {
+public class DefaultBackup extends AbstractBackupStrategy {
+    protected static int head = 0x86;
 
-    public AlwaysBackup() {
+    public DefaultBackup() {
         super(new LinkedList<>());
     }
 
-    public AlwaysBackup(String logFilePath) {
+    public DefaultBackup(String logFilePath) {
         super(logFilePath, new LinkedList<>());
     }
 
     @Override
     protected void doBackup() {
-        File file = new File(getLogFilePath());
-        FileOutputStream fileOutputStream;
-        try {
-            fileOutputStream = new FileOutputStream(file, true);
+        try (FileOutputStream fileOutputStream = new FileOutputStream(new File(getLogFilePath()), true)) {
             Queue<TransactionLog> transactionLogs = getTransactionLogs();
             while (!transactionLogs.isEmpty()) {
                 TransactionLog transactionLog = transactionLogs.poll();
-
-//                fileOutputStream.write("begin".getBytes(StandardCharsets.UTF_8));
-
                 byte[] data = getSerializer().serialize(transactionLog);
-//                int size = data.length;
-//                fileOutputStream.write(size);
-                fileOutputStream.write(data);
+                // TODO: 序列化
             }
             fileOutputStream.flush();
-            fileOutputStream.close();
-        } catch (SerializeException | IOException e) {
+        } catch (IOException | SerializeException e) {
             throw new IllegalStateException(e);
         }
     }
 
+    @Override
     protected void doRedo(List<Database> databases) {
         Queue<TransactionLog> transactionLogs = getTransactionLogsByRedoLog();
-        if (transactionLogs == null) {
-            return;
-        }
         while (!transactionLogs.isEmpty()) {
             TransactionLog transactionLog = transactionLogs.poll();
             List<RedoLog> redoLogs = transactionLog.getRedoLogs();
@@ -76,25 +72,22 @@ public class AlwaysBackup extends AbstractBackupStrategy {
 
     private Queue<TransactionLog> getTransactionLogsByRedoLog() {
         File file = new File(getLogFilePath());
-        FileInputStream fileInputStream;
-        ObjectInputStream objectInputStream;
+        if (file.length() == 0) {
+            return new LinkedList<>();
+        }
         Queue<TransactionLog> transactionLogs = new LinkedList<>();
-        try {
-            fileInputStream = new FileInputStream(file);
-            if (fileInputStream.available() <= 0) {
-                return null;
-            }
-            objectInputStream = new ObjectInputStream(fileInputStream);
-            while (fileInputStream.available() > 0) {
+        try (ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(file))) {
+            while (true) {
                 TransactionLog log = (TransactionLog) objectInputStream.readObject();
+                if (log == null) {
+                    break;
+                }
                 transactionLogs.offer(log);
-                byte[] buf = new byte[4];
-                fileInputStream.read(buf);
             }
+            // TODO: 反序列化
         } catch (IOException | ClassNotFoundException e) {
             throw new IllegalStateException(e);
         }
-
         return transactionLogs;
     }
 }

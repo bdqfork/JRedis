@@ -8,7 +8,6 @@ import com.github.bdqfork.client.gui.CommandLineClient;
  * @author Trey
  * @since 2020/10/31
  */
-
 public class Application {
 
     public static void main(String[] args) {

@@ -8,6 +8,10 @@ import java.util.List;
  * @since 2020/09/22
  */
 public class TransactionLog implements Serializable {
+    /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
     private Long transactionId;
     private List<RedoLog> redoLogs;
 
