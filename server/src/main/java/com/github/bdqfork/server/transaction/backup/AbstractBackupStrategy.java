@@ -1,16 +1,11 @@
 package com.github.bdqfork.server.transaction.backup;
 
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
+import com.github.bdqfork.core.exception.SerializeException;
 import com.github.bdqfork.core.serializtion.JdkSerializer;
 import com.github.bdqfork.core.serializtion.Serializer;
 import com.github.bdqfork.server.database.Database;
@@ -50,47 +45,120 @@ public abstract class AbstractBackupStrategy implements BackupStrategy {
 
     @Override
     public void redo(List<Database> databases) {
-        Queue<RedoLog> redoLogs = getRedoLogs();
-        while (!redoLogs.isEmpty()) {
-            RedoLog redoLog = redoLogs.poll();
+        Queue<TransactionLog> transactionLogs = getTransactionLogQueue();
+        if (transactionLogs == null) {
+            return;
+        }
 
-            int databaseId = redoLog.getDatabaseId();
+        while (!transactionLogs.isEmpty()) {
+            TransactionLog transactionLog = transactionLogs.poll();
+            List<RedoLog> redoLogs = transactionLog.getRedoLogs();
+            for (RedoLog redoLog : redoLogs) {
+                int databaseId = redoLog.getDatabaseId();
 
-            Database database = databases.get(databaseId);
+                Database database = databases.get(databaseId);
 
-            OperationType operationType = redoLog.getOperationType();
+                OperationType operationType = redoLog.getOperationType();
 
-            String key = redoLog.getKey();
+                String key = redoLog.getKey();
 
-            if (operationType == OperationType.UPDATE) {
-                Object value = redoLog.getValue();
-                Long expireAt = redoLog.getExpireAt();
-                database.saveOrUpdate(key, value, expireAt);
-            }
+                if (operationType == OperationType.UPDATE) {
+                    Object value = redoLog.getValue();
+                    Long expireAt = redoLog.getExpireAt();
+                    database.saveOrUpdate(key, value, expireAt);
+                }
 
-            if (operationType == OperationType.DELETE) {
-                database.delete(key);
+                if (operationType == OperationType.DELETE) {
+                    database.delete(key);
+                }
             }
         }
     }
 
-    private Queue<RedoLog> getRedoLogs() {
+    private Queue<TransactionLog> getTransactionLogQueue() {
         File file = new File(getLogFilePath());
         if (file.length() == 0) {
-            return new LinkedList<>();
+            return null;
         }
-        Queue<RedoLog> redoLogs = new LinkedList<>();
-        try (InputStream inputStream = new FileInputStream(file);
-                DataInputStream dataInputStream = new DataInputStream(inputStream)) {
-            while (true) {
-                RedoLog log = null;
-                if (log == null) {
-                    break;
-                }
-                redoLogs.offer(log);
+        Queue<TransactionLog> transactionLogs = new LinkedList<>();
+        try(FileInputStream fileInputStream = new FileInputStream(file);
+            DataInputStream dataInputStream = new DataInputStream(fileInputStream)){
+
+            while (dataInputStream.available() > 0) {
+                byte head = dataInputStream.readByte();
+                byte version = dataInputStream.readByte();
+                int transactionLogSize = dataInputStream.readInt();
+
+                TransactionLog transactionLog = new TransactionLog();
+                List<RedoLog> redoLogs = getRedoLogs(dataInputStream, transactionLogSize);
+                transactionLog.setRedoLogs(redoLogs);
+                transactionLogs.offer(transactionLog);
             }
-            // TODO: 反序列化
         } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+        return transactionLogs;
+    }
+
+    private List<RedoLog> getRedoLogs(DataInputStream dataInputStream, int transactionLogSize) {
+        List<RedoLog> redoLogs = new LinkedList<>();
+        try {
+            // TODO: 反序列化
+            for (int flag = 0; flag < transactionLogSize; ) {
+                RedoLog redoLog = new RedoLog();
+                byte redoLogHead = dataInputStream.readByte();
+                flag += Byte.SIZE;
+
+                int redoLogSize = dataInputStream.readInt();
+                flag += Integer.SIZE;
+
+                byte operationType = dataInputStream.readByte();
+                redoLog.setOperationType(OperationType.getOperationTypeByValue(operationType));
+                flag += Byte.SIZE;
+
+                Integer databaseId = dataInputStream.readInt();
+                redoLog.setDatabaseId(databaseId);
+                flag += Integer.SIZE;
+
+                int keySize = dataInputStream.readInt();
+                flag += Integer.SIZE;
+
+                byte[] keyBuff = new byte[keySize];
+                dataInputStream.read(keyBuff);
+                String key = new String(keyBuff);
+                redoLog.setKey(key);
+                flag += keySize;
+
+                int valueSize = dataInputStream.readInt();
+                flag += Integer.SIZE;
+
+                byte[] valueBuff = new byte[valueSize];
+                dataInputStream.read(valueBuff);
+                flag += valueSize;
+
+                int valueTypeSize = dataInputStream.readInt();
+                flag += Integer.SIZE;
+
+                byte[] valueTypeBuff = new byte[valueTypeSize];
+                dataInputStream.read(valueTypeBuff);
+                String valueTypeName = new String(valueTypeBuff);
+                flag += valueTypeSize;
+
+
+                Class<?> valueType = null;
+                if (!"byte[]".equals(valueTypeName)) {
+                    valueType = Class.forName(valueTypeName);
+                }
+                Object value = getSerializer().deserialize(valueBuff, valueType);
+                redoLog.setValue(value);
+
+                long expirationTime = dataInputStream.readLong();
+                redoLog.setExpireAt(expirationTime);
+                flag += Long.SIZE;
+
+                redoLogs.add(redoLog);
+            }
+        } catch (IOException | ClassNotFoundException | SerializeException e) {
             throw new IllegalStateException(e);
         }
         return redoLogs;

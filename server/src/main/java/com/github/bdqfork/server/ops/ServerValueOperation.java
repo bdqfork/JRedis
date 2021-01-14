@@ -3,6 +3,7 @@ package com.github.bdqfork.server.ops;
 import com.github.bdqfork.core.operation.ValueOperation;
 import com.github.bdqfork.core.util.DateUtils;
 import com.github.bdqfork.server.database.Database;
+import com.github.bdqfork.server.transaction.OperationType;
 
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeUnit;
@@ -117,7 +118,7 @@ public class ServerValueOperation extends AbstractServerOperation implements Val
     @SuppressWarnings("unchecked")
     @Override
     public <T> T get(String key) {
-        return (T) execute(new UpdateCommand() {
+        return (T) execute(new Command() {
             @Override
             public String getKey() {
                 return key;
@@ -126,6 +127,11 @@ public class ServerValueOperation extends AbstractServerOperation implements Val
             @Override
             public Object execute(Database database) {
                 return database.get(key);
+            }
+
+            @Override
+            public OperationType getOperationType() {
+                return null;
             }
         });
     }

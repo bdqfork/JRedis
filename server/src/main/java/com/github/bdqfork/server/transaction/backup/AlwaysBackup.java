@@ -70,34 +70,34 @@ public class AlwaysBackup extends AbstractBackupStrategy {
             Map<String, Object> redoLogData = redoLogDataQueue.poll();
             dataOutputStream.writeByte(redoLogHead);
 
-            Integer redoLogDataSize = (Integer)redoLogData.get(REDO_LOG_DATA_SIZE);
+            int redoLogDataSize = (int)redoLogData.get(REDO_LOG_DATA_SIZE);
             dataOutputStream.writeInt(redoLogDataSize);
 
-            Integer operationType = (Integer) redoLogData.get(OPERATION_TYPE);
+            int operationType = (int) redoLogData.get(OPERATION_TYPE);
             dataOutputStream.writeByte(operationType);
 
-            Long dataBaseId = (Long) redoLogData.get(DATABASE_ID);
-            dataOutputStream.writeLong(dataBaseId);
+            int dataBaseId = (int) redoLogData.get(DATABASE_ID);
+            dataOutputStream.writeInt(dataBaseId);
 
-            Integer keySize = (Integer) redoLogData.get(KEY_SIZE);
+            int keySize = (int) redoLogData.get(KEY_SIZE);
             dataOutputStream.writeInt(keySize);
 
             byte[] keyBuff = (byte[]) redoLogData.get(KEY_STRING);
             dataOutputStream.write(keyBuff);
 
-            Integer valueSize = (Integer) redoLogData.get(VALUE_SIZE);
+            int valueSize = (int) redoLogData.get(VALUE_SIZE);
             dataOutputStream.writeInt(valueSize);
 
             byte[] valueBuff = (byte[]) redoLogData.get(VALUE_STRING);
             dataOutputStream.write(valueBuff);
 
-            Integer valueTypeNameSize = (Integer) redoLogData.get(VALUE_TYPE_NAME_SIZE);
+            int valueTypeNameSize = (int) redoLogData.get(VALUE_TYPE_NAME_SIZE);
             dataOutputStream.writeInt(valueTypeNameSize);
 
             byte[] valueTypeBuff = (byte[]) redoLogData.get(VALUE_TYPE);
             dataOutputStream.write(valueTypeBuff);
 
-            Long expirationTime = (Long) redoLogData.get(EXPIRATION_TIME);
+            long expirationTime = (long) redoLogData.get(EXPIRATION_TIME);
             dataOutputStream.writeLong(expirationTime);
         }
     }
@@ -122,7 +122,7 @@ public class AlwaysBackup extends AbstractBackupStrategy {
         int valueSize = valueBuff.length;
 
         Map<String, Object> redoLogData = new HashMap<>();
-        redoLogData.put(REDO_LOG_DATA_SIZE, redoLog);
+        redoLogData.put(REDO_LOG_DATA_SIZE, getRedoLogDataSize(keySize,valueTypeNameSize,valueSize));
         redoLogData.put(OPERATION_TYPE, redoLog.getOperationType().getValue());
         redoLogData.put(DATABASE_ID, redoLog.getDatabaseId());
         redoLogData.put(KEY_SIZE, keySize);
@@ -138,6 +138,6 @@ public class AlwaysBackup extends AbstractBackupStrategy {
     }
 
     private int getRedoLogDataSize(int keySize, int valueNameSize, int valueSize) {
-        return Byte.SIZE + Integer.SIZE + Byte.SIZE + Long.SIZE + Integer.SIZE + keySize + Integer.SIZE + valueSize + Integer.SIZE + valueNameSize + Long.SIZE;
+        return Byte.SIZE + Integer.SIZE + Integer.SIZE + keySize + Integer.SIZE + valueSize + Integer.SIZE + valueNameSize + Long.SIZE;
     }
 }

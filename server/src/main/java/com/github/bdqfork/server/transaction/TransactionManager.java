@@ -60,7 +60,7 @@ public class TransactionManager {
 
     private Object doCommit(Transaction transaction, int databaseId, Command command) {
 
-        if (!(command instanceof UpdateCommand) || !(command instanceof DeleteCommand)) {
+        if (!(command instanceof UpdateCommand) && !(command instanceof DeleteCommand)) {
             return command.execute(databases.get(databaseId));
         }
 
