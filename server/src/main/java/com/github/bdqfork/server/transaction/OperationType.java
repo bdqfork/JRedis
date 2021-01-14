@@ -25,6 +25,9 @@ public enum OperationType {
         if (value == 1) {
             return OperationType.DELETE;
         }
+        if (value == 2) {
+            return OperationType.QUERY;
+        }
         return null;
     }
 }

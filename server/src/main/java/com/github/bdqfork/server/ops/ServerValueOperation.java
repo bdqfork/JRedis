@@ -131,7 +131,7 @@ public class ServerValueOperation extends AbstractServerOperation implements Val
 
             @Override
             public OperationType getOperationType() {
-                return null;
+                return OperationType.QUERY;
             }
         });
     }

@@ -55,7 +55,7 @@ public class ServerKeyOperation extends AbstractServerOperation implements KeyOp
 
             @Override
             public OperationType getOperationType() {
-                return null;
+                return OperationType.QUERY;
             }
         });
     }
@@ -79,7 +79,7 @@ public class ServerKeyOperation extends AbstractServerOperation implements KeyOp
 
             @Override
             public OperationType getOperationType() {
-                return null;
+                return OperationType.QUERY;
             }
         });
     }

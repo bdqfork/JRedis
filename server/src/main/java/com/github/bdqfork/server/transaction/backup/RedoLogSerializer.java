@@ -23,10 +23,10 @@ public class RedoLogSerializer {
         try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
                 DataOutputStream outputStream = new DataOutputStream(byteArrayOutputStream)) {
             int operationType = redoLog.getOperationType().getValue();
-            outputStream.writeInt(operationType);
+            outputStream.writeByte(operationType);
 
-            long databaseId = redoLog.getDatabaseId();
-            outputStream.writeLong(databaseId);
+            int databaseId = redoLog.getDatabaseId();
+            outputStream.writeInt(databaseId);
 
             String key = redoLog.getKey();
             byte[] keyBuffer = key.getBytes(StandardCharsets.UTF_8);
@@ -59,7 +59,7 @@ public class RedoLogSerializer {
         try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(data);
                 DataInputStream inputStream = new DataInputStream(byteArrayInputStream)) {
             RedoLog redoLog = new RedoLog();
-            int operationType = inputStream.readInt();
+            byte operationType = inputStream.readByte();
             redoLog.setOperationType(OperationType.getOperationType(operationType));
 
             int databaseId = inputStream.readInt();
@@ -78,8 +78,10 @@ public class RedoLogSerializer {
             byte[] valueTypeBuffer = new byte[valueTypeNameSize];
             inputStream.read(valueTypeBuffer);
             String valueTypeName = new String(valueTypeBuffer, StandardCharsets.UTF_8);
-            Class<?> valueType = Class.forName(valueTypeName);
-
+            Class<?> valueType = null;
+            if (!"byte[]".equals(valueTypeName)) {
+                valueType = Class.forName(valueTypeName);
+            }
             Object value = serializer.deserialize(valueBuffer, valueType);
             redoLog.setValue(value);
 

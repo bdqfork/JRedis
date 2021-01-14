@@ -1,9 +1,6 @@
 package com.github.bdqfork.server.transaction.backup;
 
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -81,9 +78,13 @@ public abstract class AbstractBackupStrategy implements BackupStrategy {
         try (FileInputStream fileInputStream = new FileInputStream(file);
                 DataInputStream dataInputStream = new DataInputStream(fileInputStream)) {
 
-
-            while (dataInputStream.available() > 0) {
-                int head = dataInputStream.readInt();
+            byte[] headBuff = new byte[4];
+            while (fileInputStream.read(headBuff) != -1) {
+                ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(headBuff);
+                DataInputStream headReader = new DataInputStream(byteArrayInputStream);
+                int head = headReader.readInt();
+                byteArrayInputStream.close();
+                headReader.close();
                 if (head != HEAD) {
                     throw new IllegalStateException(String.format("illegal head %s in back up file !", head));
                 }
