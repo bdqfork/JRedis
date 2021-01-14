@@ -6,7 +6,7 @@ package com.github.bdqfork.server.transaction;
  */
 
 public enum OperationType {
-    UPDATE(0), DELETE(1);
+    UPDATE(0), DELETE(1), QUERY(2);
 
     private int value;
 
@@ -18,7 +18,7 @@ public enum OperationType {
         return value;
     }
 
-    public static OperationType getOperationTypeByValue(int value) {
+    public static OperationType getOperationType(int value) {
         if (value == 0) {
             return OperationType.UPDATE;
         }

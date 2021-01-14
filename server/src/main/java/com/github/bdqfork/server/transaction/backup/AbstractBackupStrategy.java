@@ -1,13 +1,15 @@
 package com.github.bdqfork.server.transaction.backup;
 
-import java.io.*;
-import java.util.LinkedList;
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Queue;
 
-import com.github.bdqfork.core.exception.SerializeException;
 import com.github.bdqfork.core.serializtion.JdkSerializer;
-import com.github.bdqfork.core.serializtion.Serializer;
 import com.github.bdqfork.server.database.Database;
 import com.github.bdqfork.server.transaction.OperationType;
 import com.github.bdqfork.server.transaction.RedoLog;
@@ -18,9 +20,11 @@ import com.github.bdqfork.server.transaction.TransactionLog;
  * @since 2020/09/22
  */
 public abstract class AbstractBackupStrategy implements BackupStrategy {
+    protected static final int HEAD = 0x86;
+    protected static final byte VERSION = 1;
     private static final String DEFAULT_LOG_FILE_PATH = "./jredis.log";
     private final String logFilePath;
-    private Serializer serializer = new JdkSerializer();
+    private RedoLogSerializer serializer;
     /**
      * RedoLog buffer
      */
@@ -41,134 +45,70 @@ public abstract class AbstractBackupStrategy implements BackupStrategy {
                 throw new IllegalStateException(e);
             }
         }
+        this.serializer = new RedoLogSerializer(new JdkSerializer());
     }
 
     @Override
     public void redo(List<Database> databases) {
-        Queue<TransactionLog> transactionLogs = getTransactionLogQueue();
-        if (transactionLogs == null) {
-            return;
-        }
+        List<RedoLog> redoLogs = getRedoLogs();
+        for (RedoLog redoLog : redoLogs) {
+            int databaseId = redoLog.getDatabaseId();
 
-        while (!transactionLogs.isEmpty()) {
-            TransactionLog transactionLog = transactionLogs.poll();
-            List<RedoLog> redoLogs = transactionLog.getRedoLogs();
-            for (RedoLog redoLog : redoLogs) {
-                int databaseId = redoLog.getDatabaseId();
+            Database database = databases.get(databaseId);
 
-                Database database = databases.get(databaseId);
+            OperationType operationType = redoLog.getOperationType();
 
-                OperationType operationType = redoLog.getOperationType();
+            String key = redoLog.getKey();
 
-                String key = redoLog.getKey();
+            if (operationType == OperationType.UPDATE) {
+                Object value = redoLog.getValue();
+                Long expireAt = redoLog.getExpireAt();
+                database.saveOrUpdate(key, value, expireAt);
+            }
 
-                if (operationType == OperationType.UPDATE) {
-                    Object value = redoLog.getValue();
-                    Long expireAt = redoLog.getExpireAt();
-                    database.saveOrUpdate(key, value, expireAt);
-                }
-
-                if (operationType == OperationType.DELETE) {
-                    database.delete(key);
-                }
+            if (operationType == OperationType.DELETE) {
+                database.delete(key);
             }
         }
     }
 
-    private Queue<TransactionLog> getTransactionLogQueue() {
+    private List<RedoLog> getRedoLogs() {
         File file = new File(getLogFilePath());
         if (file.length() == 0) {
-            return null;
+            return Collections.emptyList();
         }
-        Queue<TransactionLog> transactionLogs = new LinkedList<>();
-        try(FileInputStream fileInputStream = new FileInputStream(file);
-            DataInputStream dataInputStream = new DataInputStream(fileInputStream)){
+        List<RedoLog> redoLogs = new ArrayList<>();
+        try (FileInputStream fileInputStream = new FileInputStream(file);
+                DataInputStream dataInputStream = new DataInputStream(fileInputStream)) {
 
             while (dataInputStream.available() > 0) {
-                byte head = dataInputStream.readByte();
-                byte version = dataInputStream.readByte();
-                int transactionLogSize = dataInputStream.readInt();
-
-                TransactionLog transactionLog = new TransactionLog();
-                List<RedoLog> redoLogs = getRedoLogs(dataInputStream, transactionLogSize);
-                transactionLog.setRedoLogs(redoLogs);
-                transactionLogs.offer(transactionLog);
-            }
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
-        return transactionLogs;
-    }
-
-    private List<RedoLog> getRedoLogs(DataInputStream dataInputStream, int transactionLogSize) {
-        List<RedoLog> redoLogs = new LinkedList<>();
-        try {
-            // TODO: 反序列化
-            for (int flag = 0; flag < transactionLogSize; ) {
-                RedoLog redoLog = new RedoLog();
-                byte redoLogHead = dataInputStream.readByte();
-                flag += Byte.SIZE;
-
-                int redoLogSize = dataInputStream.readInt();
-                flag += Integer.SIZE;
-
-                byte operationType = dataInputStream.readByte();
-                redoLog.setOperationType(OperationType.getOperationTypeByValue(operationType));
-                flag += Byte.SIZE;
-
-                Integer databaseId = dataInputStream.readInt();
-                redoLog.setDatabaseId(databaseId);
-                flag += Integer.SIZE;
-
-                int keySize = dataInputStream.readInt();
-                flag += Integer.SIZE;
-
-                byte[] keyBuff = new byte[keySize];
-                dataInputStream.read(keyBuff);
-                String key = new String(keyBuff);
-                redoLog.setKey(key);
-                flag += keySize;
-
-                int valueSize = dataInputStream.readInt();
-                flag += Integer.SIZE;
-
-                byte[] valueBuff = new byte[valueSize];
-                dataInputStream.read(valueBuff);
-                flag += valueSize;
-
-                int valueTypeSize = dataInputStream.readInt();
-                flag += Integer.SIZE;
-
-                byte[] valueTypeBuff = new byte[valueTypeSize];
-                dataInputStream.read(valueTypeBuff);
-                String valueTypeName = new String(valueTypeBuff);
-                flag += valueTypeSize;
-
-
-                Class<?> valueType = null;
-                if (!"byte[]".equals(valueTypeName)) {
-                    valueType = Class.forName(valueTypeName);
+                int head = dataInputStream.readInt();
+                if (head != HEAD) {
+                    throw new IllegalStateException(String.format("illegal head %s in back up file !", head));
                 }
-                Object value = getSerializer().deserialize(valueBuff, valueType);
-                redoLog.setValue(value);
+                byte version = dataInputStream.readByte();
+                if (version != VERSION) {
+                    throw new IllegalStateException(String.format("illegal version %s in back up file !", version));
+                }
 
-                long expirationTime = dataInputStream.readLong();
-                redoLog.setExpireAt(expirationTime);
-                flag += Long.SIZE;
+                int dataSize = dataInputStream.readInt();
+                byte[] data = new byte[dataSize];
+                dataInputStream.read(data);
 
+                RedoLog redoLog = getSerializer().deserialize(data);
                 redoLogs.add(redoLog);
             }
-        } catch (IOException | ClassNotFoundException | SerializeException e) {
+        } catch (IOException e) {
             throw new IllegalStateException(e);
         }
         return redoLogs;
     }
 
-    public void setSerializer(Serializer serializer) {
+    public void setSerializer(RedoLogSerializer serializer) {
         this.serializer = serializer;
     }
 
-    protected Serializer getSerializer() {
+    protected RedoLogSerializer getSerializer() {
         return this.serializer;
     }
 
