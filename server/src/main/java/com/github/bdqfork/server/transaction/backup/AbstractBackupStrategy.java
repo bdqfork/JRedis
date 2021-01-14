@@ -84,8 +84,8 @@ public abstract class AbstractBackupStrategy implements BackupStrategy {
         try(FileInputStream fileInputStream = new FileInputStream(file);
             DataInputStream dataInputStream = new DataInputStream(fileInputStream)){
 
-            while (dataInputStream.available() > 0) {
-                byte head = dataInputStream.readByte();
+            byte[] head = new byte[1];
+            while ((fileInputStream.read(head)) != -1) {
                 byte version = dataInputStream.readByte();
                 int transactionLogSize = dataInputStream.readInt();
 
