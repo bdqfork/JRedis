@@ -27,7 +27,7 @@ public abstract class AbstractBackupStrategy implements BackupStrategy {
     protected static final String TEMP_SUFFIX = ".tmp";
     protected static final String DEFAULT_LOG_FILE_PATH = ".";
     protected static final String LOG_FILE_NAME = "jredis.log";
-    protected static final String LOG_DATE_FILE_NAME_FORMATER = "jredis-%s.log";
+    protected static final String LOG_DATE_FILE_NAME_FORMATER = "jredis.%s.log";
     protected final String logFilePath;
     private RedoLogSerializer serializer;
     /**
