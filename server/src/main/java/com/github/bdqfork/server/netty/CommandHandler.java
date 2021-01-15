@@ -8,8 +8,6 @@ import com.github.bdqfork.core.protocol.LiteralWrapper;
 import com.github.bdqfork.server.Dispatcher;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -24,7 +22,6 @@ import java.util.concurrent.ExecutionException;
  */
 
 public class CommandHandler extends SimpleChannelInboundHandler<Object> {
-    private static final Logger log = LoggerFactory.getLogger(CommandHandler.class);
     private final Dispatcher dispatcher;
 
     public CommandHandler(Dispatcher dispatcher) {
@@ -33,20 +30,20 @@ public class CommandHandler extends SimpleChannelInboundHandler<Object> {
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
-        LiteralWrapper literalWrapper = (LiteralWrapper) msg;
+        LiteralWrapper<?> literalWrapper = (LiteralWrapper<?>) msg;
         SocketAddress socketAddress = ctx.channel().remoteAddress();
         OperationContext context = parse((InetSocketAddress) socketAddress, literalWrapper);
         CommandFuture future = dispatcher.dispatch(context);
-        LiteralWrapper result;
+        LiteralWrapper<?> result;
         try {
-            result = (LiteralWrapper) future.get();
+            result = (LiteralWrapper<?>) future.get();
         } catch (ExecutionException e) {
             result = LiteralWrapper.errorWrapper(e.getMessage());
         }
         ctx.writeAndFlush(result.encode());
     }
 
-    private OperationContext parse(InetSocketAddress socketAddress, LiteralWrapper command) {
+    private OperationContext parse(InetSocketAddress socketAddress, LiteralWrapper<?> command) {
         @SuppressWarnings("unchecked")
         List<LiteralWrapper<?>> literalWrappers = (List<LiteralWrapper<?>>) command.getData();
 
@@ -64,7 +61,7 @@ public class CommandHandler extends SimpleChannelInboundHandler<Object> {
 
         SessionHolder.setSession(session);
 
-        LiteralWrapper literalWrapper = LiteralWrapper.singleWrapper();
+        LiteralWrapper<?> literalWrapper = LiteralWrapper.singleWrapper();
         literalWrapper.setData("Connect Ok!");
         ctx.writeAndFlush(literalWrapper.encode());
     }

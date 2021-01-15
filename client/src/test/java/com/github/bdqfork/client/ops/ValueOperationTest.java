@@ -7,8 +7,6 @@ import org.junit.Test;
 
 import java.io.Serializable;
 
-import static org.junit.Assert.*;
-
 public class ValueOperationTest {
     JRedisClient client;
     ValueOperation operation;
@@ -56,15 +54,16 @@ public class ValueOperationTest {
     }
 
     static class User implements Serializable {
+        /**
+         *
+         */
+        private static final long serialVersionUID = 1L;
         String username;
         String password;
 
         @Override
         public String toString() {
-            return "User{" +
-                    "username='" + username + '\'' +
-                    ", password='" + password + '\'' +
-                    '}';
+            return "User{" + "username='" + username + '\'' + ", password='" + password + '\'' + '}';
         }
     }
 

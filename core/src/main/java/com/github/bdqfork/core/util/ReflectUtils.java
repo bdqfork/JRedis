@@ -1,17 +1,13 @@
 package com.github.bdqfork.core.util;
 
-import com.github.bdqfork.core.operation.ValueOperation;
-
 import java.io.File;
 import java.io.IOException;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.net.JarURLConnection;
 import java.net.URL;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import java.util.stream.Collectors;
 
 /**
  * @author bdq
@@ -32,22 +28,22 @@ public class ReflectUtils {
         if (packageName == null || "".equals(packageName)) {
             return Collections.emptySet();
         }
-        //将包名改为相对路径
+        // 将包名改为相对路径
         String packagePath = packageName.replace(".", "/");
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         Set<Class<?>> classes = new HashSet<>();
         try {
-            //扫描包路径，返回资源的枚举
+            // 扫描包路径，返回资源的枚举
             Enumeration<URL> dirs = classLoader.getResources(packagePath);
             while (dirs.hasMoreElements()) {
                 URL fileUrl = dirs.nextElement();
                 String filePath = fileUrl.getPath();
-                //判断资源类型
+                // 判断资源类型
                 if (FILE_PROTOCOL.equals(fileUrl.getProtocol())) {
-                    //处理文件类型的Class
+                    // 处理文件类型的Class
                     classes.addAll(getClassesByFilePath(filePath, packagePath));
                 } else if (JAR_PROTOCOL.equals(fileUrl.getProtocol())) {
-                    //处理Jar包中的Class
+                    // 处理Jar包中的Class
                     JarURLConnection jarURLConnection = (JarURLConnection) fileUrl.openConnection();
                     JarFile jarFile = jarURLConnection.getJarFile();
                     classes.addAll(getClassesByJar(jarFile));
@@ -69,8 +65,8 @@ public class ReflectUtils {
         for (File chirldFile : chirldFiles) {
             String path = FileUtils.getUniformAbsolutePath(chirldFile);
             if (!chirldFile.isDirectory() && path.endsWith(SUFFIX)) {
-                String className = path.substring(path.indexOf(packagePath), path.lastIndexOf(SUFFIX))
-                        .replaceAll("/", ".");
+                String className = path.substring(path.indexOf(packagePath), path.lastIndexOf(SUFFIX)).replaceAll("/",
+                        ".");
                 try {
                     Class<?> clazz = Class.forName(className);
                     classes.add(clazz);
@@ -92,8 +88,7 @@ public class ReflectUtils {
                 JarEntry jarEntry = jarEntries.nextElement();
                 String entryName = jarEntry.getName();
                 if (!jarEntry.isDirectory() && entryName.endsWith(SUFFIX)) {
-                    String className = entryName.substring(0, entryName.lastIndexOf(SUFFIX))
-                            .replaceAll("/", ".");
+                    String className = entryName.substring(0, entryName.lastIndexOf(SUFFIX)).replaceAll("/", ".");
                     Class<?> clazz = Class.forName(className);
                     classes.add(clazz);
                 }
@@ -112,8 +107,7 @@ public class ReflectUtils {
      */
     public static String getSignature(Method method) {
         StringBuilder signBuilder = new StringBuilder();
-        signBuilder.append(method.getName())
-                .append("(");
+        signBuilder.append(method.getName()).append("(");
         Class<?>[] parameters = method.getParameterTypes();
 
         for (int i = 0; i < parameters.length; i++) {
@@ -137,7 +131,7 @@ public class ReflectUtils {
             ParameterizedType parameterizedType = (ParameterizedType) type;
             return parameterizedType.getActualTypeArguments();
         }
-        return new Type[]{type};
+        return new Type[] { type };
     }
 
     /**
@@ -156,9 +150,7 @@ public class ReflectUtils {
      * @return true 或者 false
      */
     public static boolean isInjectableValueType(Class<?> clazz) {
-        return isPrimitiveOrWrapper(clazz) ||
-                clazz.equals(Map.class) ||
-                clazz.isArray();
+        return isPrimitiveOrWrapper(clazz) || clazz.equals(Map.class) || clazz.isArray();
     }
 
     /**
@@ -168,16 +160,10 @@ public class ReflectUtils {
      * @return true 或者 false
      */
     public static boolean isPrimitiveOrWrapper(Class<?> clazz) {
-        return clazz.equals(Integer.class) ||
-                clazz.equals(Byte.class) ||
-                clazz.equals(Long.class) ||
-                clazz.equals(Double.class) ||
-                clazz.equals(Float.class) ||
-                clazz.equals(Character.class) ||
-                clazz.equals(Short.class) ||
-                clazz.equals(Boolean.class) ||
-                clazz.equals(String.class) ||
-                clazz.isPrimitive();
+        return clazz.equals(Integer.class) || clazz.equals(Byte.class) || clazz.equals(Long.class)
+                || clazz.equals(Double.class) || clazz.equals(Float.class) || clazz.equals(Character.class)
+                || clazz.equals(Short.class) || clazz.equals(Boolean.class) || clazz.equals(String.class)
+                || clazz.isPrimitive();
     }
 
     /**
@@ -259,7 +245,8 @@ public class ReflectUtils {
         return method.getReturnType() == Void.TYPE;
     }
 
-    public static Method getMethod(Class<?> clazz, String methodName, Class<?>... parameterTypes) throws NoSuchMethodException {
+    public static Method getMethod(Class<?> clazz, String methodName, Class<?>... parameterTypes)
+            throws NoSuchMethodException {
         return clazz.getDeclaredMethod(methodName, parameterTypes);
     }
 }

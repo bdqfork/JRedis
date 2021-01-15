@@ -5,6 +5,11 @@ package com.github.bdqfork.core.exception;
  * @since 2020/09/22
  */
 public class OperationException extends TransactionException {
+    /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
+
     public OperationException(Throwable cause) {
         super(cause);
     }

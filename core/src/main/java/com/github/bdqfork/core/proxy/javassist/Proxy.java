@@ -16,6 +16,10 @@ import java.util.stream.Collectors;
  * @since 2019/12/23
  */
 public abstract class Proxy implements Serializable {
+    /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
     private static final Map<String, Object> CACHE = Collections.synchronizedMap(new WeakHashMap<>());
     private static final AtomicLong PROXY_COUNTER = new AtomicLong(0);
 
@@ -39,8 +43,9 @@ public abstract class Proxy implements Serializable {
      * @return 代理实例
      * @throws IllegalArgumentException 生成失败时抛出
      */
-    public static Object newProxyInstance(ClassLoader classLoader, Class<?>[] interfaces, InvocationHandler handler) throws IllegalArgumentException {
-        //通过接口名生成KEY来缓存实例
+    public static Object newProxyInstance(ClassLoader classLoader, Class<?>[] interfaces, InvocationHandler handler)
+            throws IllegalArgumentException {
+        // 通过接口名生成KEY来缓存实例
         String key = getKey(interfaces);
         if (CACHE.containsKey(key)) {
             return CACHE.get(key);
@@ -51,22 +56,22 @@ public abstract class Proxy implements Serializable {
             generator.addInterface(interfaceClass.getName());
         }
 
-        //生成代理子类名称，例如Proxy0
+        // 生成代理子类名称，例如Proxy0
         String className = Proxy.class.getName() + PROXY_COUNTER.getAndIncrement();
 
         generator.setClassName(className).setSuperClass(Proxy.class.getName());
 
-        //与JDK类似，将接口方法作为代理子类的属性
+        // 与JDK类似，将接口方法作为代理子类的属性
         generator.addField("private java.lang.reflect.Method[] methods;");
-        //将InvocationHandler也作为代理子类的属性
+        // 将InvocationHandler也作为代理子类的属性
         generator.addField("private " + InvocationHandler.class.getName() + " handler;");
 
-        //添加构造方法，初始化InvocationHandler
-        generator.addConstructor(Modifier.PUBLIC, new Class[]{InvocationHandler.class}, "$0.handler=$1;");
-        //添加默认构造方法
+        // 添加构造方法，初始化InvocationHandler
+        generator.addConstructor(Modifier.PUBLIC, new Class[] { InvocationHandler.class }, "$0.handler=$1;");
+        // 添加默认构造方法
         generator.addDefaultConstructor();
 
-        //扫描接口，获取所有的接口方法，并通过方法签名进行去重
+        // 扫描接口，获取所有的接口方法，并通过方法签名进行去重
         Set<String> worked = new HashSet<>();
         List<Method> methods = new ArrayList<>();
         for (Class<?> interfaceClass : interfaces) {
@@ -79,7 +84,7 @@ public abstract class Proxy implements Serializable {
             }
         }
 
-        //根据接口方法信息，生成代理实例的方法实现
+        // 根据接口方法信息，生成代理实例的方法实现
         for (int i = 0; i < methods.size(); i++) {
             Method method = methods.get(i);
             StringBuilder codeBuilder = new StringBuilder();
@@ -88,19 +93,20 @@ public abstract class Proxy implements Serializable {
             if (!Void.TYPE.equals(returnType)) {
                 codeBuilder.append("return ").append(castResult("result", returnType));
             }
-            generator.addMethod(Modifier.PUBLIC, returnType, method.getName(),
-                    method.getParameterTypes(), method.getExceptionTypes(), codeBuilder.toString());
+            generator.addMethod(Modifier.PUBLIC, returnType, method.getName(), method.getParameterTypes(),
+                    method.getExceptionTypes(), codeBuilder.toString());
         }
 
-        //添加Proxy抽象方法的实现
-        generator.addMethod("public Object newInstance(" + InvocationHandler.class.getName() + " handler){return new " + className + "($1);}");
+        // 添加Proxy抽象方法的实现
+        generator.addMethod("public Object newInstance(" + InvocationHandler.class.getName() + " handler){return new "
+                + className + "($1);}");
 
         try {
             Class<?> clazz = generator.toClass();
             Proxy proxy = (Proxy) clazz.newInstance();
-            //生成代理实例
+            // 生成代理实例
             proxy = (Proxy) proxy.newInstance(handler);
-            //为代理实例的methods属性赋值
+            // 为代理实例的methods属性赋值
             Field handlerField = clazz.getDeclaredField("methods");
             ReflectUtils.makeAccessible(handlerField);
             handlerField.set(proxy, methods.toArray(new Method[0]));
@@ -117,9 +123,7 @@ public abstract class Proxy implements Serializable {
     }
 
     private static String getKey(Class<?>[] interfaces) {
-        return Arrays.stream(interfaces)
-                .map(Class::getName)
-                .collect(Collectors.joining());
+        return Arrays.stream(interfaces).map(Class::getName).collect(Collectors.joining());
     }
 
     /**

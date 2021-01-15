@@ -1,16 +1,5 @@
 package com.github.bdqfork.server.ops;
 
-import com.github.bdqfork.core.exception.IllegalCommandException;
-import com.github.bdqfork.core.exception.JRedisException;
-import com.github.bdqfork.core.operation.KeyOperation;
-import com.github.bdqfork.core.operation.Operation;
-import com.github.bdqfork.core.operation.ValueOperation;
-import com.github.bdqfork.core.protocol.LiteralWrapper;
-import com.github.bdqfork.core.util.ReflectUtils;
-import com.github.bdqfork.server.transaction.TransactionManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -20,12 +9,20 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import com.github.bdqfork.core.exception.IllegalCommandException;
+import com.github.bdqfork.core.exception.JRedisException;
+import com.github.bdqfork.core.operation.KeyOperation;
+import com.github.bdqfork.core.operation.Operation;
+import com.github.bdqfork.core.operation.ValueOperation;
+import com.github.bdqfork.core.protocol.LiteralWrapper;
+import com.github.bdqfork.core.util.ReflectUtils;
+import com.github.bdqfork.server.transaction.TransactionManager;
+
 /**
  * @author bdq
  * @since 2020/11/11
  */
 public class GenericServerOperation extends AbstractServerOperation {
-    private static final Logger log = LoggerFactory.getLogger(GenericServerOperation.class);
 
     private final Map<String, Class<?>> operations = new HashMap<>();
     private final Map<String, Operation> operationInstances = new HashMap<>();
@@ -34,7 +31,7 @@ public class GenericServerOperation extends AbstractServerOperation {
     private ServerKeyOperation serverKeyOperation;
 
     public GenericServerOperation(int databaseId, TransactionManager transactionManager) {
-        initKeyOperation(databaseId,transactionManager);
+        initKeyOperation(databaseId, transactionManager);
         initValueOperation(databaseId, transactionManager);
     }
 
@@ -42,13 +39,10 @@ public class GenericServerOperation extends AbstractServerOperation {
         serverKeyOperation = new ServerKeyOperation();
         serverKeyOperation.setDatabaseId(databaseId);
         serverKeyOperation.setTransactionManager(transactionManager);
-        Arrays.stream(KeyOperation.class.getMethods())
-                .map(Method::getName)
-                .distinct()
-                .forEach(name -> {
-                    operations.put(name, KeyOperation.class);
-                    operationInstances.put(name, serverKeyOperation);
-                });
+        Arrays.stream(KeyOperation.class.getMethods()).map(Method::getName).distinct().forEach(name -> {
+            operations.put(name, KeyOperation.class);
+            operationInstances.put(name, serverKeyOperation);
+        });
     }
 
     private void initValueOperation(int databaseId, TransactionManager transactionManager) {
@@ -93,17 +87,17 @@ public class GenericServerOperation extends AbstractServerOperation {
 
     private Class<?>[] getParameterTypes(String cmd, Object[] args) {
         if ("get".equals(cmd) || "ttl".equals(cmd) || "ttlAt".equals(cmd) || "del".equals(cmd)) {
-            return new Class[]{String.class};
+            return new Class[] { String.class };
         }
 
         if ("set".equals(cmd) || "setnx".equals(cmd) || "setxx".equals(cmd)) {
             if (args.length == 4) {
-                return new Class[]{String.class, Object.class, long.class, TimeUnit.class};
+                return new Class[] { String.class, Object.class, long.class, TimeUnit.class };
             }
-            return new Class[]{String.class, Object.class};
+            return new Class[] { String.class, Object.class };
         }
         if ("setex".equals(cmd) || "setpx".equals(cmd)) {
-            return new Class[]{String.class, Object.class, long.class};
+            return new Class[] { String.class, Object.class, long.class };
         }
         throw new IllegalCommandException(String.format("Illegal command %s", cmd));
     }
@@ -112,11 +106,11 @@ public class GenericServerOperation extends AbstractServerOperation {
         if (result instanceof String) {
             return LiteralWrapper.singleWrapper((String) result);
         }
-        if (result instanceof Long ) {
+        if (result instanceof Long) {
             return LiteralWrapper.integerWrapper((Number) result);
         }
         if (result instanceof Boolean) {
-            return LiteralWrapper.integerWrapper((Boolean) result ?1L:0L);
+            return LiteralWrapper.integerWrapper((Boolean) result ? 1L : 0L);
         }
         if (result instanceof byte[]) {
             return LiteralWrapper.bulkWrapper((byte[]) result);

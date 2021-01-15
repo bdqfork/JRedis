@@ -34,13 +34,13 @@ public class CommandHandler extends SimpleChannelInboundHandler<Object> {
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
-        LiteralWrapper literalWrapper = (LiteralWrapper) msg;
+        LiteralWrapper<?> literalWrapper = (LiteralWrapper<?>) msg;
         if (!queue.isEmpty()) {
             OperationContext operationContext = queue.take();
             CommandFuture commandFuture = operationContext.getResultFuture();
-            if (!literalWrapper.isTypeOf(Type.ERROR)){
+            if (!literalWrapper.isTypeOf(Type.ERROR)) {
                 commandFuture.complete(literalWrapper);
-            }else {
+            } else {
                 commandFuture.completeExceptionally(new JRedisException((String) literalWrapper.getData()));
             }
         }

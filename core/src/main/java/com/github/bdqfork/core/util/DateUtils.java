@@ -1,6 +1,7 @@
 package com.github.bdqfork.core.util;
 
 import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 
@@ -14,5 +15,11 @@ public class DateUtils {
         dateTime = dateTime.plus(offset, unit);
         ZonedDateTime zonedDateTime = dateTime.atZone(ZoneId.systemDefault());
         return Date.from(zonedDateTime.toInstant());
+    }
+
+    public static String getNow(String pattern) {
+        LocalDateTime dateTime = LocalDateTime.now();
+        ZonedDateTime zonedDateTime = dateTime.atZone(ZoneId.systemDefault());
+        return zonedDateTime.format(DateTimeFormatter.ofPattern(pattern));
     }
 }
