@@ -20,8 +20,8 @@ dependencies {
     implementation "io.netty:netty-all:${libs.netty}"
     implementation "com.caucho:hessian:${libs.hessian}"
     implementation "org.slf4j:slf4j-api:${libs.slf4j}"
-    implementation "org.slf4j:slf4j-nop:${libs.slf4j}"
     implementation "org.javassist:javassist:${libs.javassist}"
+    implementation "ch.qos.logback:logback-classic:${libs.logback}"
 
     testCompile group: 'junit', name: 'junit', version: '4.12'
 }

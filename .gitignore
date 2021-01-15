@@ -8,3 +8,5 @@ bin
 .classpath
 .settings
 .vscode
+backup
+logs

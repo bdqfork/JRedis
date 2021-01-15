@@ -26,7 +26,7 @@ public class AlwaysBackup extends AbstractBackupStrategy {
 
     @Override
     public void backup(TransactionLog transactionLog) {
-        try (OutputStream outputStream = new FileOutputStream(new File(getLogFilePath()), true);
+        try (OutputStream outputStream = new FileOutputStream(new File(getFullLogFilePath()), true);
                 DataOutputStream dataOutputStream = new DataOutputStream(outputStream)) {
 
             List<RedoLog> redoLogs = transactionLog.getRedoLogs();

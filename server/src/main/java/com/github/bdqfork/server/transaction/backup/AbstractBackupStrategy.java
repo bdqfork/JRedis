@@ -25,7 +25,7 @@ public abstract class AbstractBackupStrategy implements BackupStrategy {
     protected static final byte HEAD = 0x68;
     protected static final byte VERSION = 1;
     protected static final String TEMP_SUFFIX = ".tmp";
-    protected static final String DEFAULT_LOG_FILE_PATH = ".";
+    protected static final String DEFAULT_LOG_FILE_PATH = "backup";
     protected static final String LOG_FILE_NAME = "jredis.log";
     protected static final String LOG_DATE_FILE_NAME_FORMATER = "jredis.%s.log";
     protected final String logFilePath;
@@ -42,12 +42,16 @@ public abstract class AbstractBackupStrategy implements BackupStrategy {
     public AbstractBackupStrategy(String logFilePath, Queue<TransactionLog> transactionLogs) {
         this.logFilePath = logFilePath.replace("//", "/");
         this.transactionLogs = transactionLogs;
-        File file = new File(getLogFilePath());
+        File logDir = new File(logFilePath);
+        if (!logDir.exists()) {
+            logDir.mkdirs();
+        }
+        File file = new File(getFullLogFilePath());
         if (!file.exists()) {
             try {
                 file.createNewFile();
             } catch (IOException e) {
-                log.error("Failed to create log file {} !", getLogFilePath());
+                log.error("Failed to create log file {} !", getFullLogFilePath());
                 throw new IllegalStateException(e);
             }
         }
@@ -79,13 +83,13 @@ public abstract class AbstractBackupStrategy implements BackupStrategy {
     }
 
     private List<RedoLog> getRedoLogs() {
-        File logFile = new File(getLogFilePath());
+        File logFile = new File(getFullLogFilePath());
 
         if (logFile.length() == 0) {
             return Collections.emptyList();
         }
 
-        File tmpFile = new File(getLogFilePath() + TEMP_SUFFIX);
+        File tmpFile = new File(getFullLogFilePath() + TEMP_SUFFIX);
 
         if (tmpFile.exists()) {
             tmpFile.delete();
@@ -129,11 +133,11 @@ public abstract class AbstractBackupStrategy implements BackupStrategy {
         }
         String oldLogFileName = String.format(LOG_DATE_FILE_NAME_FORMATER, DateUtils.getNow("yyyy-MM-dd HH:mm:ss"));
         logFile.renameTo(new File(oldLogFileName));
-        tmpFile.renameTo(new File(getLogFilePath()));
+        tmpFile.renameTo(new File(getFullLogFilePath()));
         return redoLogs;
     }
 
-    protected String getLogFilePath() {
+    protected String getFullLogFilePath() {
         return logFilePath + "/" + LOG_FILE_NAME;
     }
 
