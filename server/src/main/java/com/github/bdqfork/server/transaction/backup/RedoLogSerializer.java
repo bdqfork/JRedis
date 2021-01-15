@@ -34,20 +34,22 @@ public class RedoLogSerializer {
             outputStream.writeInt(keySize);
             outputStream.write(keyBuffer);
 
-            Object value = redoLog.getValue();
-            byte[] valueBuffer = serializer.serialize(value);
-            int valueSize = valueBuffer.length;
-            outputStream.writeInt(valueSize);
-            outputStream.write(valueBuffer);
+            if (operationType == 0) {
+                Object value = redoLog.getValue();
+                byte[] valueBuffer = serializer.serialize(value);
+                int valueSize = valueBuffer.length;
+                outputStream.writeInt(valueSize);
+                outputStream.write(valueBuffer);
 
-            String valueType = value.getClass().getTypeName();
-            byte[] valueTypeBuffer = valueType.getBytes(StandardCharsets.UTF_8);
-            int valueTypeNameSize = valueTypeBuffer.length;
-            outputStream.writeInt(valueTypeNameSize);
-            outputStream.write(valueTypeBuffer);
+                String valueType = value.getClass().getTypeName();
+                byte[] valueTypeBuffer = valueType.getBytes(StandardCharsets.UTF_8);
+                int valueTypeNameSize = valueTypeBuffer.length;
+                outputStream.writeInt(valueTypeNameSize);
+                outputStream.write(valueTypeBuffer);
 
-            long expireAt = redoLog.getExpireAt();
-            outputStream.writeLong(expireAt);
+                long expireAt = redoLog.getExpireAt();
+                outputStream.writeLong(expireAt);
+            }
 
             return byteArrayOutputStream.toByteArray();
         } catch (SerializeException | IOException e) {
@@ -70,23 +72,25 @@ public class RedoLogSerializer {
             inputStream.read(keyBuffer);
             redoLog.setKey(new String(keyBuffer, StandardCharsets.UTF_8));
 
-            int valueSize = inputStream.readInt();
-            byte[] valueBuffer = new byte[valueSize];
-            inputStream.read(valueBuffer);
+            if (operationType == 0) {
+                int valueSize = inputStream.readInt();
+                byte[] valueBuffer = new byte[valueSize];
+                inputStream.read(valueBuffer);
 
-            int valueTypeNameSize = inputStream.readInt();
-            byte[] valueTypeBuffer = new byte[valueTypeNameSize];
-            inputStream.read(valueTypeBuffer);
-            String valueTypeName = new String(valueTypeBuffer, StandardCharsets.UTF_8);
-            Class<?> valueType = null;
-            if (!"byte[]".equals(valueTypeName)) {
-                valueType = Class.forName(valueTypeName);
+                int valueTypeNameSize = inputStream.readInt();
+                byte[] valueTypeBuffer = new byte[valueTypeNameSize];
+                inputStream.read(valueTypeBuffer);
+                String valueTypeName = new String(valueTypeBuffer, StandardCharsets.UTF_8);
+                Class<?> valueType = null;
+                if (!"byte[]".equals(valueTypeName)) {
+                    valueType = Class.forName(valueTypeName);
+                }
+                Object value = serializer.deserialize(valueBuffer, valueType);
+                redoLog.setValue(value);
+
+                long expireAt = inputStream.readLong();
+                redoLog.setExpireAt(expireAt);
             }
-            Object value = serializer.deserialize(valueBuffer, valueType);
-            redoLog.setValue(value);
-
-            long expireAt = inputStream.readLong();
-            redoLog.setExpireAt(expireAt);
             return redoLog;
         } catch (SerializeException | IOException | ClassNotFoundException e) {
             throw new IllegalStateException(e);
