@@ -75,6 +75,7 @@ public class Database {
         if (expireMap.containsKey(key)) {
             long ttl = expireMap.get(key) - System.currentTimeMillis();
             if (ttl <= 0) {
+                dictMap.remove(key);
                 expireMap.remove(key);
                 return -2L;
             }
@@ -94,5 +95,9 @@ public class Database {
             return expireMap.get(key);
         }
         return -1L;
+    }
+
+    public void expire(String key, long expire) {
+        expireMap.put(key, expire);
     }
 }

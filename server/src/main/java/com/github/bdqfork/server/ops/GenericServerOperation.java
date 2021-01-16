@@ -99,6 +99,9 @@ public class GenericServerOperation extends AbstractServerOperation {
         if ("setex".equals(cmd) || "setpx".equals(cmd)) {
             return new Class[] { String.class, Object.class, long.class };
         }
+        if ("expire".equals(cmd) || "expireAt".equals(cmd)) {
+            return new Class[]{String.class, long.class};
+        }
         throw new IllegalCommandException(String.format("Illegal command %s", cmd));
     }
 
