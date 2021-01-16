@@ -26,30 +26,62 @@ public class ValueOperationTest {
     @Test
     public void set() {
         User user = new User();
-        user.username = "test";
+        user.username = "test1";
         user.password = "pass";
-        operation.set("testKey", user);
+        operation.set("test1", user);
+        get("test1");
     }
 
     @Test
     public void setex() {
+        User user = new User();
+        user.username = "test2";
+        user.password = "pass";
+        operation.setex("test2", user, 20);
+        get("test2");
     }
 
     @Test
     public void setpx() {
+        User user = new User();
+        user.username = "test3";
+        user.password = "pass";
+        operation.setpx("test3", user, 20000);
+        get("test3");
     }
 
     @Test
     public void setnx() {
+        User user = new User();
+        user.username = "test4";
+        user.password = "pass";
+        operation.setnx("test4", user);
+        operation.setnx("test5", user);
+        get("test3");
+        get("test4");
     }
 
     @Test
     public void setxx() {
+        User user = new User();
+        user.username = "test5";
+        user.password = "pass";
+        operation.setxx("test5", user);
+        operation.setxx("test6", user);
+        get("test5");
+        get("test6");
     }
 
     @Test
-    public void get() {
-        User user = operation.get("testKey");
+    public void getTest() {
+        get("test4");
+        get("test5");
+        client.OpsForKey().del("test4");
+        get("test4");
+    }
+
+    public void get(String key) {
+        User user = operation.get(key);
         System.out.println(user);
     }
 
