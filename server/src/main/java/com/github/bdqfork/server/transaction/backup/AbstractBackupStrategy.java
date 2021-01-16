@@ -131,10 +131,13 @@ public abstract class AbstractBackupStrategy implements BackupStrategy {
         } catch (IOException e) {
             log.warn("An error occurs during redo process ! {}", e.getMessage());
         }
-        String oldLogFileName = String.format(LOG_DATE_FILE_NAME_FORMATER, DateUtils.getNow("yyyy-MM-dd HH:mm:ss"));
-        logFile.renameTo(new File(oldLogFileName));
+        logFile.renameTo(new File(getOldLogFilePath()));
         tmpFile.renameTo(new File(getFullLogFilePath()));
         return redoLogs;
+    }
+
+    protected String getOldLogFilePath() {
+        return logFilePath + "/" + String.format(LOG_DATE_FILE_NAME_FORMATER, DateUtils.getNow("yyyy-MM-dd HH:mm:ss"));
     }
 
     protected String getFullLogFilePath() {
