@@ -129,7 +129,7 @@ public abstract class AbstractBackupStrategy implements BackupStrategy {
                 dataOutputStream.write(data);
             }
         } catch (IOException e) {
-            log.warn("An error occurs during redo process ! {}", e.getMessage());
+            log.warn("An error occurs during redo process: {}", e.getMessage());
         }
         logFile.renameTo(new File(getOldLogFilePath()));
         tmpFile.renameTo(new File(getFullLogFilePath()));
@@ -154,6 +154,11 @@ public abstract class AbstractBackupStrategy implements BackupStrategy {
 
     protected Queue<TransactionLog> getTransactionLogs() {
         return transactionLogs;
+    }
+
+    @Override
+    public void reWrite(List<Database> databases) {
+        // TODO 扫描所有数据库，并生成RedoLog，同时序列化到磁盘
     }
 
 }
