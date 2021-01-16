@@ -1,5 +1,6 @@
 package com.github.bdqfork.server.transaction.backup;
 
+import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -26,8 +27,9 @@ public class AlwaysBackup extends AbstractBackupStrategy {
 
     @Override
     public void backup(TransactionLog transactionLog) {
-        try (OutputStream outputStream = new FileOutputStream(new File(getFullLogFilePath()), true);
-                DataOutputStream dataOutputStream = new DataOutputStream(outputStream)) {
+        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                OutputStream outputStream = new FileOutputStream(new File(getFullLogFilePath()), true);
+                DataOutputStream dataOutputStream = new DataOutputStream(byteArrayOutputStream)) {
 
             List<RedoLog> redoLogs = transactionLog.getRedoLogs();
             for (RedoLog redoLog : redoLogs) {
@@ -37,6 +39,7 @@ public class AlwaysBackup extends AbstractBackupStrategy {
                 dataOutputStream.writeInt(data.length);
                 dataOutputStream.write(data);
             }
+            outputStream.write(byteArrayOutputStream.toByteArray());
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
