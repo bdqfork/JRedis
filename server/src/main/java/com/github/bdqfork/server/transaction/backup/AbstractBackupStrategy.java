@@ -1,17 +1,20 @@
 package com.github.bdqfork.server.transaction.backup;
 
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Queue;
 
 import com.github.bdqfork.core.serializtion.JdkSerializer;
 import com.github.bdqfork.core.util.DateUtils;
 import com.github.bdqfork.server.database.Database;
 import com.github.bdqfork.server.transaction.OperationType;
 import com.github.bdqfork.server.transaction.RedoLog;
-import com.github.bdqfork.server.transaction.TransactionLog;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,23 +28,13 @@ public abstract class AbstractBackupStrategy implements BackupStrategy {
     protected static final byte HEAD = 0x68;
     protected static final byte VERSION = 1;
     protected static final String TEMP_SUFFIX = ".tmp";
-    protected static final String DEFAULT_LOG_FILE_PATH = "backup";
     protected static final String LOG_FILE_NAME = "jredis.log";
     protected static final String LOG_DATE_FILE_NAME_FORMATER = "jredis.%s.log";
     protected final String logFilePath;
     private RedoLogSerializer serializer;
-    /**
-     * RedoLog buffer
-     */
-    private final Queue<TransactionLog> transactionLogs;
 
-    public AbstractBackupStrategy(Queue<TransactionLog> transactionLogs) {
-        this(DEFAULT_LOG_FILE_PATH, transactionLogs);
-    }
-
-    public AbstractBackupStrategy(String logFilePath, Queue<TransactionLog> transactionLogs) {
+    public AbstractBackupStrategy(String logFilePath) {
         this.logFilePath = logFilePath.replace("//", "/");
-        this.transactionLogs = transactionLogs;
         File logDir = new File(logFilePath);
         if (!logDir.exists()) {
             logDir.mkdirs();
@@ -150,10 +143,6 @@ public abstract class AbstractBackupStrategy implements BackupStrategy {
 
     protected RedoLogSerializer getSerializer() {
         return this.serializer;
-    }
-
-    protected Queue<TransactionLog> getTransactionLogs() {
-        return transactionLogs;
     }
 
     @Override

@@ -8,7 +8,8 @@ import com.github.bdqfork.server.database.Database;
 import com.github.bdqfork.server.netty.NettyServer;
 import com.github.bdqfork.server.transaction.TransactionManager;
 import com.github.bdqfork.server.transaction.backup.BackupStrategy;
-import com.github.bdqfork.server.transaction.backup.BackupStrategyFactory;
+import com.github.bdqfork.server.transaction.backup.ScheduledBackup;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,8 +23,8 @@ import java.util.concurrent.BlockingQueue;
  * @since 2020/11/9
  */
 public class JRedisServer {
-    private static final Logger log = LoggerFactory.getLogger(JRedisServer.class);
     private static final int DEFAULT_QUEUE_SIZE = 1024;
+    private static Logger log = LoggerFactory.getLogger(JRedisServer.class);
     private final BlockingQueue<OperationContext> queue = new ArrayBlockingQueue<>(DEFAULT_QUEUE_SIZE);
 
     private NettyServer nettyServer;
@@ -43,8 +44,8 @@ public class JRedisServer {
     }
 
     private void initializeTransactionManager() {
-        String backupStrategyName = configuration.getBackupStrategy();
-        BackupStrategy backupStrategy = BackupStrategyFactory.getBackupStrategy(backupStrategyName);
+        BackupStrategy backupStrategy = new ScheduledBackup(configuration.getLogPath(),
+                configuration.getLogBufferSize(), configuration.getLogIntervals());
         transactionManager = new TransactionManager(backupStrategy, databases);
     }
 
@@ -78,31 +79,35 @@ public class JRedisServer {
         Properties properties = FileUtils.loadPropertiesFile(profilePath);
         this.configuration = new Configuration();
 
-        String redoLogPath = properties.getProperty("redoLogPath", Configuration.DEFAULT_CONFIG_FILE_PATH);
-        configuration.setRedoLogPath(redoLogPath);
-
         String host = properties.getProperty("host", Configuration.DEFAULT_CONFIG_HOST);
         configuration.setHost(host);
 
-        Integer port = Integer.valueOf(
-                properties.getProperty("port", Configuration.DEFAULT_CONFIG_PORT));
+        Integer port = Integer.valueOf(properties.getProperty("port", Configuration.DEFAULT_CONFIG_PORT));
         configuration.setPort(port);
 
-        Integer databaseNumber = Integer.valueOf(properties.getProperty(
-                "databaseNumber", Configuration.DEFAULT_CONFIG_DATABASES_NUMBER));
+        Integer databaseNumber = Integer
+                .valueOf(properties.getProperty("database.number", Configuration.DEFAULT_CONFIG_DATABASES_NUMBER));
         configuration.setDatabaseNumber(databaseNumber);
 
         String serializer = properties.getProperty("serializer", Configuration.DEFAULT_CONFIG_SERIALIZER);
         configuration.setSerializer(serializer);
-
-        String backupStrategy = properties.getProperty("backupStrategy", Configuration.DEFAULT_CONFIG_BACKUP_STRATEGY);
-        configuration.setBackupStrategy(backupStrategy);
 
         String username = properties.getProperty("username");
         configuration.setUsername(username);
 
         String password = properties.getProperty("password");
         configuration.setPassword(password);
+
+        String redoLogPath = properties.getProperty("log.path", Configuration.DEFAULT_CONFIG_LOG_PATH);
+        configuration.setLogPath(redoLogPath);
+
+        Integer logBufferSize = Integer
+                .valueOf(properties.getProperty("log.buffer.size", Configuration.DEFAULT_CONFIG_LOG_BUFFER_SIZE));
+        configuration.setLogBufferSize(logBufferSize);
+
+        Long logIntervals = Long
+                .valueOf(properties.getProperty("log.intervals", Configuration.DEFAULT_CONFIG_LOG_INTERVALS));
+        configuration.setLogIntervals(logIntervals);
     }
 
     /**
