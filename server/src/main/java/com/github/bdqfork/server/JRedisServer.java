@@ -4,7 +4,7 @@ import com.github.bdqfork.core.operation.OperationContext;
 import com.github.bdqfork.core.exception.JRedisException;
 import com.github.bdqfork.core.util.FileUtils;
 import com.github.bdqfork.server.config.Configuration;
-import com.github.bdqfork.server.database.Database;
+import com.github.bdqfork.server.database.DatabaseManager;
 import com.github.bdqfork.server.netty.NettyServer;
 import com.github.bdqfork.server.transaction.TransactionManager;
 import com.github.bdqfork.server.transaction.backup.BackupStrategy;
@@ -29,7 +29,7 @@ public class JRedisServer {
 
     private NettyServer nettyServer;
     private Configuration configuration;
-    private List<Database> databases;
+    private DatabaseManager databaseManager;
     private TransactionManager transactionManager;
     private Dispatcher dispatcher;
 
@@ -46,7 +46,7 @@ public class JRedisServer {
     private void initializeTransactionManager() {
         BackupStrategy backupStrategy = new ScheduledBackup(configuration.getLogPath(),
                 configuration.getLogBufferSize(), configuration.getLogIntervals());
-        transactionManager = new TransactionManager(backupStrategy, databases);
+        transactionManager = new TransactionManager(backupStrategy, databaseManager);
     }
 
     public void listen() {
@@ -114,9 +114,6 @@ public class JRedisServer {
      * 初始化所有数据库
      */
     private void initializeDatabases() {
-        this.databases = new ArrayList<>();
-        for (int i = 1; i <= configuration.getDatabaseNumber(); i++) {
-            databases.add(new Database());
-        }
+        databaseManager = new DatabaseManager(configuration.getDatabaseNumber());
     }
 }

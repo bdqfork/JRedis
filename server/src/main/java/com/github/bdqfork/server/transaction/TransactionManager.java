@@ -4,7 +4,7 @@ import com.github.bdqfork.core.exception.TransactionException;
 import com.github.bdqfork.server.ops.Command;
 import com.github.bdqfork.server.ops.DeleteCommand;
 import com.github.bdqfork.server.ops.UpdateCommand;
-import com.github.bdqfork.server.database.Database;
+import com.github.bdqfork.server.database.DatabaseManager;
 import com.github.bdqfork.server.transaction.backup.BackupStrategy;
 
 import java.util.*;
@@ -21,12 +21,12 @@ public class TransactionManager {
     private static final AtomicLong ID_GENERATOR = new AtomicLong(0);
     private final Map<Long, Transaction> transactionMap = new ConcurrentHashMap<>(256);
     private final BackupStrategy strategy;
-    private final List<Database> databases;
+    private final DatabaseManager databaseManager;
 
-    public TransactionManager(BackupStrategy strategy, List<Database> databases) {
+    public TransactionManager(BackupStrategy strategy, DatabaseManager databaseManager) {
         this.strategy = strategy;
-        this.databases = new ArrayList<>(databases);
-        strategy.redo(databases);
+        this.databaseManager = databaseManager;
+        strategy.redo(databaseManager);
     }
 
     private static Long newId() {
@@ -61,13 +61,13 @@ public class TransactionManager {
     private Object doCommit(Transaction transaction, int databaseId, Command command) {
 
         if (!(command instanceof UpdateCommand) && !(command instanceof DeleteCommand)) {
-            return command.execute(databases.get(databaseId));
+            return command.execute(databaseManager, databaseId);
         }
 
         UndoLog undoLog = createUndoLog(databaseId, command.getKey());
         transaction.addUndoLog(undoLog);
 
-        Object result = command.execute(databases.get(databaseId));
+        Object result = command.execute(databaseManager, databaseId);
 
         RedoLog redoLog = createRedoLog(databaseId, command.getKey(), command.getOperationType());
         transaction.addRedoLog(redoLog);
@@ -86,8 +86,7 @@ public class TransactionManager {
         for (UndoLog undoLog : undoLogs) {
 
             int databaseId = undoLog.getDatabaseId();
-            Database database = databases.get(databaseId);
-            database.saveOrUpdate(undoLog.getKey(), undoLog.getValue(), undoLog.getExpireAt());
+            databaseManager.saveOrUpdate(databaseId, undoLog.getKey(), undoLog.getValue(), undoLog.getExpireAt());
 
             RedoLog redoLog = createRedoLog(databaseId, undoLog.getKey(), OperationType.UPDATE);
             transaction.addRedoLog(redoLog);
@@ -104,10 +103,8 @@ public class TransactionManager {
     }
 
     private UndoLog createUndoLog(int databaseId, String key) {
-        Database database = databases.get(databaseId);
-
-        Object value = database.get(key);
-        Long expireAt = database.ttlAt(key) == null ? -1 : database.ttlAt(key);
+        Object value = databaseManager.get(databaseId, key);
+        Long expireAt = databaseManager.ttlAt(databaseId, key) == null ? -1 : databaseManager.ttlAt(databaseId, key);
 
         UndoLog undoLog = new UndoLog();
         undoLog.setDatabaseId(databaseId);
@@ -119,16 +116,13 @@ public class TransactionManager {
     }
 
     private RedoLog createRedoLog(int databaseId, String key, OperationType type) {
-        Database database = databases.get(databaseId);
-
-        Object value = database.get(key);
-        Long expireAt = database.ttlAt(key) == null ? -1 : database.ttlAt(key);
+        Object value = databaseManager.get(databaseId, key);
+        Long expireAt = databaseManager.ttlAt(databaseId, key) == null ? -1 : databaseManager.ttlAt(databaseId, key);
 
         RedoLog redoLog = new RedoLog();
         redoLog.setDatabaseId(databaseId);
         redoLog.setKey(key);
         redoLog.setValue(value);
-        // todo:设置datatype
         redoLog.setOperationType(type);
         redoLog.setExpireAt(expireAt);
 

@@ -3,7 +3,7 @@ package com.github.bdqfork.server.ops;
 import java.util.concurrent.TimeUnit;
 
 import com.github.bdqfork.core.operation.ValueOperation;
-import com.github.bdqfork.server.database.Database;
+import com.github.bdqfork.server.database.DatabaseManager;
 import com.github.bdqfork.server.transaction.OperationType;
 
 /**
@@ -15,14 +15,14 @@ public class ServerValueOperation extends AbstractServerOperation implements Val
     public void set(String key, Object value) {
         execute(new UpdateCommand() {
             @Override
-            public Object execute(Database database) {
-                database.saveOrUpdate(key, value, -1L);
-                return null;
+            public String getKey() {
+                return key;
             }
 
             @Override
-            public String getKey() {
-                return key;
+            public Object execute(DatabaseManager databaseManager, int databaseId) {
+                databaseManager.saveOrUpdate(databaseId, key, value, -1L);
+                return null;
             }
         });
     }
@@ -36,8 +36,8 @@ public class ServerValueOperation extends AbstractServerOperation implements Val
             }
 
             @Override
-            public Object execute(Database database) {
-                database.saveOrUpdate(key, value, expire);
+            public Object execute(DatabaseManager databaseManager, int databaseId) {
+                databaseManager.saveOrUpdate(databaseId, key, value, expire);
                 return null;
             }
         });
@@ -52,8 +52,8 @@ public class ServerValueOperation extends AbstractServerOperation implements Val
             }
 
             @Override
-            public Object execute(Database database) {
-                database.saveOrUpdate(key, value, expire * 1000);
+            public Object execute(DatabaseManager databaseManager, int databaseId) {
+                databaseManager.saveOrUpdate(databaseId, key, value, expire * 1000);
                 return null;
             }
         });
@@ -68,8 +68,8 @@ public class ServerValueOperation extends AbstractServerOperation implements Val
             }
 
             @Override
-            public Object execute(Database database) {
-                database.saveOrUpdate(key, value, expire);
+            public Object execute(DatabaseManager databaseManager, int databaseId) {
+                databaseManager.saveOrUpdate(databaseId, key, value, expire);
                 return null;
             }
         });
@@ -84,9 +84,9 @@ public class ServerValueOperation extends AbstractServerOperation implements Val
             }
 
             @Override
-            public Object execute(Database database) {
-                if (database.get(key) == null) {
-                    database.saveOrUpdate(key, value, -1L);
+            public Object execute(DatabaseManager databaseManager, int databaseId) {
+                if (databaseManager.get(databaseId, key) == null) {
+                    databaseManager.saveOrUpdate(databaseId, key, value, -1L);
                     return true;
                 }
                 return false;
@@ -103,9 +103,9 @@ public class ServerValueOperation extends AbstractServerOperation implements Val
             }
 
             @Override
-            public Object execute(Database database) {
-                if (database.get(key) != null) {
-                    database.saveOrUpdate(key, value, -1L);
+            public Object execute(DatabaseManager databaseManager, int databaseId) {
+                if (databaseManager.get(databaseId, key) != null) {
+                    databaseManager.saveOrUpdate(databaseId, key, value, -1L);
                     return true;
                 }
                 return false;
@@ -123,13 +123,13 @@ public class ServerValueOperation extends AbstractServerOperation implements Val
             }
 
             @Override
-            public Object execute(Database database) {
-                return database.get(key);
+            public OperationType getOperationType() {
+                return OperationType.QUERY;
             }
 
             @Override
-            public OperationType getOperationType() {
-                return OperationType.QUERY;
+            public Object execute(DatabaseManager databaseManager, int databaseId) {
+                return databaseManager.get(databaseId, key);
             }
         });
     }

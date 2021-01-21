@@ -2,7 +2,7 @@ package com.github.bdqfork.server.ops;
 
 import com.github.bdqfork.core.operation.KeyOperation;
 import com.github.bdqfork.core.util.DateUtils;
-import com.github.bdqfork.server.database.Database;
+import com.github.bdqfork.server.database.DatabaseManager;
 import com.github.bdqfork.server.transaction.OperationType;
 
 import java.time.temporal.ChronoUnit;
@@ -18,14 +18,14 @@ public class ServerKeyOperation extends AbstractServerOperation implements KeyOp
     public void del(String key) {
         execute(new DeleteCommand() {
             @Override
-            public Object execute(Database database) {
-                database.delete(key);
-                return null;
+            public String getKey() {
+                return key;
             }
 
             @Override
-            public String getKey() {
-                return key;
+            public Object execute(DatabaseManager databaseManager, int databaseId) {
+                databaseManager.delete(databaseId, key);
+                return null;
             }
         });
     }
@@ -39,17 +39,17 @@ public class ServerKeyOperation extends AbstractServerOperation implements KeyOp
             }
 
             @Override
-            public Object execute(Database database) {
-                if (expire > 0) {
-                    Date date = DateUtils.getDateFromNow(expire, ChronoUnit.SECONDS);
-                    database.expire(key, date.getTime());
-                }
-                return null;
+            public OperationType getOperationType() {
+                return OperationType.QUERY;
             }
 
             @Override
-            public OperationType getOperationType() {
-                return OperationType.QUERY;
+            public Object execute(DatabaseManager databaseManager, int databaseId) {
+                if (expire > 0) {
+                    Date date = DateUtils.getDateFromNow(expire, ChronoUnit.SECONDS);
+                    databaseManager.expire(databaseId, key, date.getTime());
+                }
+                return null;
             }
         });
     }
@@ -63,14 +63,14 @@ public class ServerKeyOperation extends AbstractServerOperation implements KeyOp
             }
 
             @Override
-            public Object execute(Database database) {
-                database.expire(key, expireAt);
-                return null;
+            public OperationType getOperationType() {
+                return OperationType.QUERY;
             }
 
             @Override
-            public OperationType getOperationType() {
-                return OperationType.QUERY;
+            public Object execute(DatabaseManager databaseManager, int databaseId) {
+                databaseManager.expire(databaseId, key, expireAt);
+                return null;
             }
         });
     }
@@ -84,17 +84,17 @@ public class ServerKeyOperation extends AbstractServerOperation implements KeyOp
             }
 
             @Override
-            public Object execute(Database database) {
-                Long ttl = database.ttl(key);
-                if (ttl == null) {
-                    ttl = -1L;
-                }
-                return ttl;
+            public OperationType getOperationType() {
+                return OperationType.QUERY;
             }
 
             @Override
-            public OperationType getOperationType() {
-                return OperationType.QUERY;
+            public Object execute(DatabaseManager databaseManager, int databaseId) {
+                Long ttl = databaseManager.ttl(databaseId, key);
+                if (ttl == null) {
+                    ttl = -1L;
+                }
+                return null;
             }
         });
     }
@@ -108,17 +108,17 @@ public class ServerKeyOperation extends AbstractServerOperation implements KeyOp
             }
 
             @Override
-            public Object execute(Database database) {
-                Long ttlAt = database.ttlAt(key);
+            public OperationType getOperationType() {
+                return OperationType.QUERY;
+            }
+
+            @Override
+            public Object execute(DatabaseManager databaseManager, int databaseId) {
+                Long ttlAt = databaseManager.ttlAt(databaseId, key);
                 if (ttlAt == null) {
                     ttlAt = -1L;
                 }
                 return ttlAt;
-            }
-
-            @Override
-            public OperationType getOperationType() {
-                return OperationType.QUERY;
             }
         });
     }

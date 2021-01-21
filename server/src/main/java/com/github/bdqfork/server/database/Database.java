@@ -13,13 +13,17 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author bdq
  * @since 2020/9/20
  */
-public class Database {
+class Database {
     private final Map<String, Object> dictMap;
     private final Map<String, Long> expireMap;
 
     public Database() {
-        dictMap = new ConcurrentHashMap<>(256);
-        expireMap = new ConcurrentHashMap<>(256);
+        this(new ConcurrentHashMap<>(256), new ConcurrentHashMap<>(256));
+    }
+
+    private Database(Map<String, Object> dictMap, Map<String, Long> expireMap) {
+        this.dictMap = dictMap;
+        this.expireMap = expireMap;
     }
 
     /**
@@ -46,7 +50,6 @@ public class Database {
         }
     }
 
-
     /**
      * 查询数据
      *
@@ -64,10 +67,7 @@ public class Database {
     }
 
     /**
-     * 查询数据剩余过期时间，
-     * 如果key不存在，返回-1，
-     * 如果key存在，且已经过期，返回-2，
-     * 否则返回剩余时间
+     * 查询数据剩余过期时间， 如果key不存在，返回-1， 如果key存在，且已经过期，返回-2， 否则返回剩余时间
      *
      * @param key 键
      */
@@ -100,4 +100,13 @@ public class Database {
     public void expire(String key, long expire) {
         expireMap.put(key, expire);
     }
+
+    public Database dump() {
+        Map<String, Object> dictMapDump = new ConcurrentHashMap<>(this.dictMap.size());
+        dictMapDump.putAll(this.dictMap);
+        Map<String, Long> expireMapDump = new ConcurrentHashMap<>(this.expireMap.size());
+        expireMapDump.putAll(expireMapDump);
+        return new Database(dictMapDump, expireMapDump);
+    }
+
 }

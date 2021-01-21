@@ -12,7 +12,7 @@ import java.util.List;
 
 import com.github.bdqfork.core.serializtion.JdkSerializer;
 import com.github.bdqfork.core.util.DateUtils;
-import com.github.bdqfork.server.database.Database;
+import com.github.bdqfork.server.database.DatabaseManager;
 import com.github.bdqfork.server.transaction.OperationType;
 import com.github.bdqfork.server.transaction.RedoLog;
 
@@ -52,12 +52,10 @@ public abstract class AbstractBackupStrategy implements BackupStrategy {
     }
 
     @Override
-    public void redo(List<Database> databases) {
+    public void redo(DatabaseManager databaseManager) {
         List<RedoLog> redoLogs = getRedoLogs();
         for (RedoLog redoLog : redoLogs) {
             int databaseId = redoLog.getDatabaseId();
-
-            Database database = databases.get(databaseId);
 
             OperationType operationType = redoLog.getOperationType();
 
@@ -66,11 +64,11 @@ public abstract class AbstractBackupStrategy implements BackupStrategy {
             if (operationType == OperationType.UPDATE) {
                 Object value = redoLog.getValue();
                 Long expireAt = redoLog.getExpireAt();
-                database.saveOrUpdate(key, value, expireAt);
+                databaseManager.saveOrUpdate(databaseId, key, value, expireAt);
             }
 
             if (operationType == OperationType.DELETE) {
-                database.delete(key);
+                databaseManager.delete(databaseId, key);
             }
         }
     }
@@ -146,7 +144,7 @@ public abstract class AbstractBackupStrategy implements BackupStrategy {
     }
 
     @Override
-    public void reWrite(List<Database> databases) {
+    public void reWrite(DatabaseManager databaseManager) {
         // TODO 扫描所有数据库，并生成RedoLog，同时序列化到磁盘
     }
 

@@ -1,8 +1,6 @@
 package com.github.bdqfork.server.transaction.backup;
 
-import java.util.List;
-
-import com.github.bdqfork.server.database.Database;
+import com.github.bdqfork.server.database.DatabaseManager;
 import com.github.bdqfork.server.transaction.TransactionLog;
 
 /**
@@ -24,12 +22,12 @@ public interface BackupStrategy {
      * 
      * @param databases List<Database>
      */
-    void redo(List<Database> databases);
+    void redo(DatabaseManager databaseManager);
 
     /**
      * 对日志进行重写
      * 
      * @param databases List<Database>
      */
-    void reWrite(List<Database> databases);
+    void reWrite(DatabaseManager databaseManager);
 }

@@ -1,6 +1,6 @@
 package com.github.bdqfork.server.ops;
 
-import com.github.bdqfork.server.database.Database;
+import com.github.bdqfork.server.database.DatabaseManager;
 import com.github.bdqfork.server.transaction.OperationType;
 
 /**
@@ -10,7 +10,7 @@ import com.github.bdqfork.server.transaction.OperationType;
 public interface Command {
     String getKey();
 
-    Object execute(Database database);
+    Object execute(DatabaseManager databaseManager, int databaseId);
 
     OperationType getOperationType();
 }
