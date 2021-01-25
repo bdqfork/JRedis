@@ -11,12 +11,9 @@ import com.github.bdqfork.client.gui.CommandLineClient;
 public class Application {
 
     public static void main(String[] args) {
-        String host;
-        int port;
-        if (args.length == 0) {
-            host = "127.0.0.1";
-            port = 7000;
-        } else {
+        String host = "127.0.0.1";
+        int port = 7000;
+        if (args.length > 1) {
             host = args[0];
             port = Integer.parseInt(args[1]);
         }
