@@ -15,7 +15,7 @@ public class Configuration {
     public static final String DEFAULT_CONFIG_PORT = "7000";
     public static final String DEFAULT_CONFIG_LOG_PATH = "backup";;
     public static final String DEFAULT_CONFIG_LOG_BUFFER_SIZE = "1024";
-    public static final String DEFAULT_CONFIG_LOG_INTERVALS = "60000";
+    public static final String DEFAULT_CONFIG_LOG_INTERVALS = "1000";
 
     private String host;
 
