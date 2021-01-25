@@ -71,7 +71,6 @@ public class TransactionManager {
 
         RedoLog redoLog = createRedoLog(databaseId, command.getKey(), command.getOperationType());
         transaction.addRedoLog(redoLog);
-        backup(transaction);
         return result;
     }
 
@@ -91,15 +90,21 @@ public class TransactionManager {
             RedoLog redoLog = createRedoLog(databaseId, undoLog.getKey(), OperationType.UPDATE);
             transaction.addRedoLog(redoLog);
         }
-
-        backup(transaction);
     }
 
-    private void backup(Transaction transaction) {
+    /**
+     * 备份Log
+     * 
+     * @param transactionId
+     */
+    public void backup(Long transactionId) {
+        Transaction transaction = transactionMap.get(transactionId);
         TransactionLog transactionLog = new TransactionLog();
         transactionLog.setTransactionId(transaction.getTransactionId());
         transactionLog.setRedoLogs(transaction.getRedoLogs());
         strategy.backup(transactionLog);
+
+        transactionMap.remove(transactionId);
     }
 
     private UndoLog createUndoLog(int databaseId, String key) {
