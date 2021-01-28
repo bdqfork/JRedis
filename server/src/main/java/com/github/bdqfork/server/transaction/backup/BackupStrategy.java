@@ -1,6 +1,7 @@
 package com.github.bdqfork.server.transaction.backup;
 
 import com.github.bdqfork.server.database.DatabaseManager;
+import com.github.bdqfork.server.transaction.RedoLog;
 import com.github.bdqfork.server.transaction.TransactionLog;
 
 /**
@@ -30,4 +31,17 @@ public interface BackupStrategy {
      * @param databases List<Database>
      */
     void reWrite(DatabaseManager databaseManager);
+
+    /**
+     * 判断重写操作是否正在进行
+     * @return
+     */
+    boolean isReWriteActive();
+
+    /**
+     * 将操作贮存到缓冲区
+     *
+     * @param redoLog
+     */
+    void storageOperation(RedoLog redoLog);
 }

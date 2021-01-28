@@ -23,10 +23,18 @@ public class TransactionManager {
     private final BackupStrategy strategy;
     private final DatabaseManager databaseManager;
 
-    public TransactionManager(BackupStrategy strategy, DatabaseManager databaseManager) {
+    public TransactionManager(BackupStrategy strategy, DatabaseManager databaseManager, Long rewriteIntervals) {
         this.strategy = strategy;
         this.databaseManager = databaseManager;
         strategy.redo(databaseManager);
+
+        Timer timer = new Timer("rewrite");
+        timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                strategy.reWrite(databaseManager);
+            }
+        }, rewriteIntervals, rewriteIntervals);
     }
 
     private static Long newId() {
@@ -102,6 +110,12 @@ public class TransactionManager {
         TransactionLog transactionLog = new TransactionLog();
         transactionLog.setTransactionId(transaction.getTransactionId());
         transactionLog.setRedoLogs(transaction.getRedoLogs());
+        if (strategy.isReWriteActive()) {
+            List<RedoLog> redoLogs = transactionLog.getRedoLogs();
+            for (RedoLog redoLog : redoLogs) {
+                strategy.storageOperation(redoLog);
+            }
+        }
         strategy.backup(transactionLog);
 
         transactionMap.remove(transactionId);

@@ -16,6 +16,7 @@ public class Configuration {
     public static final String DEFAULT_CONFIG_LOG_PATH = "backup";;
     public static final String DEFAULT_CONFIG_LOG_BUFFER_SIZE = "1024";
     public static final String DEFAULT_CONFIG_LOG_INTERVALS = "1000";
+    public static final String DEFAULT_CONFIG_LOG_REWRITE_INTERVALS = "900000";
 
     private String host;
 
@@ -36,6 +37,8 @@ public class Configuration {
     private Integer logBufferSize;
 
     private Long logIntervals;
+
+    private Long rewriteIntervals;
 
     public String getLogPath() {
         return logPath;
@@ -117,4 +120,11 @@ public class Configuration {
         this.logIntervals = logIntervals;
     }
 
+    public Long getRewriteIntervals() {
+        return rewriteIntervals;
+    }
+
+    public void setRewriteIntervals(Long rewriteIntervals) {
+        this.rewriteIntervals = rewriteIntervals;
+    }
 }

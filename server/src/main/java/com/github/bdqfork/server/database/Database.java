@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author bdq
  * @since 2020/9/20
  */
-class Database {
+public class Database {
     private final Map<String, Object> dictMap;
     private final Map<String, Long> expireMap;
 
@@ -109,4 +109,11 @@ class Database {
         return new Database(dictMapDump, expireMapDump);
     }
 
+    public Map<String, Object> getDictMap() {
+        return dictMap;
+    }
+
+    public Map<String, Long> getExpireMap() {
+        return expireMap;
+    }
 }

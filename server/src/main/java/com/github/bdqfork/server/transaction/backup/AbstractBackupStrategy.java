@@ -1,17 +1,15 @@
 package com.github.bdqfork.server.transaction.backup;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.io.*;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import com.github.bdqfork.core.serializtion.JdkSerializer;
 import com.github.bdqfork.core.util.DateUtils;
+import com.github.bdqfork.server.database.Database;
 import com.github.bdqfork.server.database.DatabaseManager;
 import com.github.bdqfork.server.transaction.OperationType;
 import com.github.bdqfork.server.transaction.RedoLog;
@@ -32,6 +30,9 @@ public abstract class AbstractBackupStrategy implements BackupStrategy {
     protected static final String LOG_DATE_FILE_NAME_FORMATER = "jredis.%s.log";
     protected final String logFilePath;
     private RedoLogSerializer serializer;
+    public Queue<RedoLog> operationQueue = new ConcurrentLinkedQueue<>();
+    private Lock lock = new ReentrantLock();
+    private Thread reWriteHandler;
 
     public AbstractBackupStrategy(String logFilePath) {
         this.logFilePath = logFilePath.replace("//", "/");
@@ -146,6 +147,82 @@ public abstract class AbstractBackupStrategy implements BackupStrategy {
     @Override
     public void reWrite(DatabaseManager databaseManager) {
         // TODO 扫描所有数据库，并生成RedoLog，同时序列化到磁盘
+        reWriteHandler = new Thread(() -> {
+            log.debug("Rewriting...");
+            List<Database> databases = databaseManager.dump();
+            Iterator<Database> iterator = databases.iterator();
+            int dataBasesSize = databases.size();
+            constructRedoLogAndWrite(dataBasesSize, iterator);
+            log.info("Rewriting complete!");
+        });
+        reWriteHandler.setName("rewrite");
+        reWriteHandler.start();
     }
 
+    @Override
+    public void storageOperation(RedoLog redoLog) {
+        operationQueue.offer(redoLog);
+    }
+
+    @Override
+    public boolean isReWriteActive() {
+        if (reWriteHandler == null) {
+            return false;
+        }
+        return reWriteHandler.isAlive();
+    }
+
+    private void constructRedoLogAndWrite(int databasesSize, Iterator<Database> iterator) {
+        File newLog = new File(logFilePath + "/" + "jredis_new.log");
+
+        if (newLog.exists()) {
+            newLog.delete();
+        }
+
+        try {
+            newLog.createNewFile();
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+
+        try(FileOutputStream fileOutputStream = new FileOutputStream(newLog)) {
+            lock.lock();
+            for (int i = 0; i < databasesSize; i++) {
+                Database database = iterator.next();
+                Set<Map.Entry<String, Object>> dictEntrySet = database.getDictMap().entrySet();
+                Map<String, Long> expiredMap = database.getExpireMap();
+
+                for (Map.Entry<String, Object> dictEntry : dictEntrySet) {
+                    RedoLog redoLog = new RedoLog();
+                    redoLog.setDatabaseId(i);
+                    String key = dictEntry.getKey();
+                    redoLog.setKey(key);
+                    redoLog.setValue(dictEntry.getValue());
+                    redoLog.setOperationType(OperationType.UPDATE);
+                    Long expired = expiredMap.get(key);
+                    if (expired == null){
+                        redoLog.setExpireAt(-1L);
+                    } else {
+                        redoLog.setExpireAt(expired);
+                    }
+                    byte[] data = serializer.serialize(redoLog);
+                    fileOutputStream.write(data);
+                }
+            }
+
+            while (!operationQueue.isEmpty()) {
+                RedoLog redoLog = operationQueue.poll();
+                byte[] data = serializer.serialize(redoLog);
+                fileOutputStream.write(data);
+            }
+        } catch (IOException e) {
+            log.warn("An error occurs during rewrite process: {}", e.getMessage());
+            throw new IllegalStateException(e);
+        } finally {
+            lock.unlock();
+        }
+        File oldLog = new File(getFullLogFilePath());
+        oldLog.renameTo(new File(getOldLogFilePath()));
+        newLog.renameTo(new File(getFullLogFilePath()));
+    }
 }

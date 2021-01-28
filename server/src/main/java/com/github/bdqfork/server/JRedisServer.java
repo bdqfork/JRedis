@@ -46,7 +46,7 @@ public class JRedisServer {
     private void initializeTransactionManager() {
         BackupStrategy backupStrategy = new ScheduledBackup(configuration.getLogPath(),
                 configuration.getLogBufferSize(), configuration.getLogIntervals());
-        transactionManager = new TransactionManager(backupStrategy, databaseManager);
+        transactionManager = new TransactionManager(backupStrategy, databaseManager, configuration.getRewriteIntervals());
     }
 
     public void listen() {
@@ -108,6 +108,10 @@ public class JRedisServer {
         Long logIntervals = Long
                 .valueOf(properties.getProperty("log.intervals", Configuration.DEFAULT_CONFIG_LOG_INTERVALS));
         configuration.setLogIntervals(logIntervals);
+
+        Long rewriteIntervals = Long
+                .valueOf(properties.getProperty("log.rewrite.intervals", Configuration.DEFAULT_CONFIG_LOG_REWRITE_INTERVALS));
+        configuration.setRewriteIntervals(rewriteIntervals);
     }
 
     /**
