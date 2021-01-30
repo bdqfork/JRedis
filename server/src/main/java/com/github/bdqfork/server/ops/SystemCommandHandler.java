@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.github.bdqfork.core.exception.JRedisException;
+import com.github.bdqfork.server.ops.system.RewriteCommandHandler;
 import com.github.bdqfork.server.transaction.TransactionManager;
 
 public class SystemCommandHandler implements CommandHandler {
@@ -11,7 +12,7 @@ public class SystemCommandHandler implements CommandHandler {
     private Map<String, CommandHandler> handlers = new HashMap<>();
 
     public SystemCommandHandler(Integer databaseId, TransactionManager transactionManager) {
-        // TODO: 添加子handler
+        handlers.put("rewrite", new RewriteCommandHandler(databaseId, transactionManager));
     }
 
     @Override

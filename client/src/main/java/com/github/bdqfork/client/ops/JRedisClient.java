@@ -24,12 +24,12 @@ public class JRedisClient {
     public JRedisClient(String host, Integer port, int databaseId) {
         this.host = host;
         this.port = port;
+        this.nettyChannel = new NettyChannel(host, port, queue);
         this.serializer = new JdkSerializer();
         this.operation = new DefaultOperation(databaseId, nettyChannel, queue);
     }
 
     public void connect() {
-        nettyChannel = new NettyChannel(host, port, queue);
         nettyChannel.open();
     }
 
