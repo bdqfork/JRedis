@@ -15,15 +15,11 @@ import com.github.bdqfork.core.serializtion.Serializer;
  */
 public class JRedisClient {
     private final BlockingQueue<OperationContext> queue = new ArrayBlockingQueue<>(1024);
-    private final String host;
-    private final Integer port;
     private NettyChannel nettyChannel;
     private Serializer serializer;
     private Operation operation;
 
     public JRedisClient(String host, Integer port, int databaseId) {
-        this.host = host;
-        this.port = port;
         this.nettyChannel = new NettyChannel(host, port, queue);
         this.serializer = new JdkSerializer();
         this.operation = new DefaultOperation(databaseId, nettyChannel, queue);

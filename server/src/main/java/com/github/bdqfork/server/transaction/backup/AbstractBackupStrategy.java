@@ -184,7 +184,7 @@ public abstract class AbstractBackupStrategy implements BackupStrategy {
     }
 
     private void doRewrite(List<Database> databases) {
-        File newLog = new File(logFilePath + "/" + "jredis_new.log");
+        File newLog = new File(getTempLogFilePath());
         if (newLog.exists()) {
             newLog.delete();
         }
