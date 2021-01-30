@@ -53,7 +53,7 @@ public class ServerValueOperation extends AbstractServerOperation implements Val
 
             @Override
             public Object execute(DatabaseManager databaseManager, int databaseId) {
-                databaseManager.saveOrUpdate(databaseId, key, value, expire * 1000);
+                databaseManager.saveOrUpdate(databaseId, key, value, expire);
                 return null;
             }
         });

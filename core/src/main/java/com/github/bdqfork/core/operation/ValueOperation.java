@@ -31,7 +31,7 @@ public interface ValueOperation extends Operation {
      *
      * @param key    键
      * @param value  值
-     * @param expire 过期时间，单位是秒
+     * @param expire 过期时间，单位是毫秒
      */
     void setex(String key, Object value, long expire);
 
