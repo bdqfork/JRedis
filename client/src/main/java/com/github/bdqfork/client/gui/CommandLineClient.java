@@ -1,15 +1,16 @@
 package com.github.bdqfork.client.gui;
 
-import com.github.bdqfork.core.exception.IllegalCommandException;
-import com.github.bdqfork.client.ops.JRedisClient;
-import com.github.bdqfork.core.exception.JRedisException;
-import com.github.bdqfork.core.util.StringUtils;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
+import com.github.bdqfork.client.ops.JRedisClient;
+import com.github.bdqfork.core.exception.IllegalCommandException;
+import com.github.bdqfork.core.exception.JRedisException;
+import com.github.bdqfork.core.operation.Operation;
+import com.github.bdqfork.core.util.StringUtils;
 
 /**
  * @author bdq
@@ -19,7 +20,6 @@ public class CommandLineClient {
     private static final String PREFIX_FORMAT = "%s:%d>";
     private static final String EXIT_CMD = "exit";
     private JRedisClient jRedisClient;
-    private GenericClientOperation operation;
     private String host;
     private Integer port;
 
@@ -27,7 +27,6 @@ public class CommandLineClient {
         this.host = hot;
         this.port = port;
         this.jRedisClient = new JRedisClient(host, port, 0);
-        this.operation = new GenericClientOperation();
     }
 
     public void run() {
@@ -37,7 +36,7 @@ public class CommandLineClient {
             System.out.println("Error: " + e.getMessage());
             System.exit(0);
         }
-        operation.reset(jRedisClient);
+        Operation operation = jRedisClient.ops();
 
         Scanner scanner = new Scanner(System.in);
         while (true) {
@@ -61,7 +60,7 @@ public class CommandLineClient {
 
             Object result = null;
             try {
-                result = operation.execute(cmd, args);
+                result = operation.exec(cmd, args);
             } catch (IllegalCommandException e) {
                 System.out.println("Error: " + e.getMessage());
                 continue;
@@ -89,7 +88,6 @@ public class CommandLineClient {
     private Object[] getArgs(String cmd, String[] lits) {
         List<Object> args = Arrays.stream(lits).skip(1)
                 .map(lit -> StringUtils.isNumeric(lit) ? Long.parseLong(lit) : lit).collect(Collectors.toList());
-        // todo set其他方法实现参数获取
         if ("set".equals(cmd)) {
             if (args.size() == 3) {
                 if (!(args.get(2) instanceof Long)) {

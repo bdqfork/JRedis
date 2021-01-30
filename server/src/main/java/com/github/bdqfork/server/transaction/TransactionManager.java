@@ -1,15 +1,16 @@
 package com.github.bdqfork.server.transaction;
 
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
+
 import com.github.bdqfork.core.exception.TransactionException;
+import com.github.bdqfork.server.database.DatabaseManager;
 import com.github.bdqfork.server.ops.Command;
 import com.github.bdqfork.server.ops.DeleteCommand;
 import com.github.bdqfork.server.ops.UpdateCommand;
-import com.github.bdqfork.server.database.DatabaseManager;
 import com.github.bdqfork.server.transaction.backup.BackupStrategy;
-
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * 负责进行事务管理
@@ -20,21 +21,13 @@ import java.util.concurrent.atomic.AtomicLong;
 public class TransactionManager {
     private static final AtomicLong ID_GENERATOR = new AtomicLong(0);
     private final Map<Long, Transaction> transactionMap = new ConcurrentHashMap<>(256);
-    private final BackupStrategy strategy;
+    private final BackupStrategy backupStrategy;
     private final DatabaseManager databaseManager;
 
-    public TransactionManager(BackupStrategy strategy, DatabaseManager databaseManager, Long rewriteIntervals) {
-        this.strategy = strategy;
+    public TransactionManager(BackupStrategy backupStrategy, DatabaseManager databaseManager) {
+        this.backupStrategy = backupStrategy;
         this.databaseManager = databaseManager;
-        strategy.redo(databaseManager);
-
-        Timer timer = new Timer("rewrite");
-        timer.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                strategy.reWrite(databaseManager);
-            }
-        }, rewriteIntervals, rewriteIntervals);
+        backupStrategy.redo(databaseManager);
     }
 
     private static Long newId() {
@@ -44,12 +37,11 @@ public class TransactionManager {
     /**
      * 准备事务
      *
-     * @param databaseId 数据库id
-     * @param command    命令
+     * @param command 命令
      */
-    public Long prepare(int databaseId, Command command) {
+    public Long prepare(Command<?> command) {
         Long transactionId = newId();
-        Transaction transaction = new Transaction(transactionId, databaseId, command);
+        Transaction transaction = new Transaction(transactionId, command.getDatabaseId(), command);
         transactionMap.put(transactionId, transaction);
         return transactionId;
     }
@@ -57,27 +49,26 @@ public class TransactionManager {
     /**
      * 提交事务
      *
-     * @return Object 事务执行结果
+     * @return T 事务执行结果
      */
-    public Object commit(Long transactionId) throws TransactionException {
+    public <T> T commit(Long transactionId) throws TransactionException {
         Transaction transaction = transactionMap.get(transactionId);
-        int databaseId = transaction.getDatabaseId();
-        Command command = transaction.getCommand();
-        return doCommit(transaction, databaseId, command);
+        Command<?> command = transaction.getCommand();
+        return doCommit(transaction, command);
     }
 
-    private Object doCommit(Transaction transaction, int databaseId, Command command) {
-
+    @SuppressWarnings("unchecked")
+    private <T> T doCommit(Transaction transaction, Command<?> command) {
         if (!(command instanceof UpdateCommand) && !(command instanceof DeleteCommand)) {
-            return command.execute(databaseManager, databaseId);
+            return (T) command.execute();
         }
 
-        UndoLog undoLog = createUndoLog(databaseId, command.getKey());
+        UndoLog undoLog = createUndoLog(command.getDatabaseId(), command.getKey());
         transaction.addUndoLog(undoLog);
 
-        Object result = command.execute(databaseManager, databaseId);
+        T result = (T) command.execute();
 
-        RedoLog redoLog = createRedoLog(databaseId, command.getKey(), command.getOperationType());
+        RedoLog redoLog = createRedoLog(command.getDatabaseId(), command.getKey(), command.getOperationType());
         transaction.addRedoLog(redoLog);
         return result;
     }
@@ -110,13 +101,8 @@ public class TransactionManager {
         TransactionLog transactionLog = new TransactionLog();
         transactionLog.setTransactionId(transaction.getTransactionId());
         transactionLog.setRedoLogs(transaction.getRedoLogs());
-        if (strategy.isReWriteActive()) {
-            List<RedoLog> redoLogs = transactionLog.getRedoLogs();
-            for (RedoLog redoLog : redoLogs) {
-                strategy.storageOperation(redoLog);
-            }
-        }
-        strategy.backup(transactionLog);
+
+        backupStrategy.backup(transactionLog);
 
         transactionMap.remove(transactionId);
     }
@@ -147,4 +133,13 @@ public class TransactionManager {
 
         return redoLog;
     }
+
+    public BackupStrategy gBackupStrategy() {
+        return backupStrategy;
+    }
+
+    public DatabaseManager getDatabaseManager() {
+        return databaseManager;
+    }
+
 }

@@ -1,4 +1,4 @@
-package com.github.bdqfork.core.operation;
+package com.github.bdqfork.client.ops;
 
 import java.util.concurrent.TimeUnit;
 
@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit;
  * @author bdq
  * @since 2020/11/11
  */
-public interface ValueOperation extends Operation {
+public interface ValueOperation {
 
     /**
      * 插入值

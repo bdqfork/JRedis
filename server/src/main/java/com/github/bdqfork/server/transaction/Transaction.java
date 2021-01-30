@@ -13,11 +13,11 @@ import java.util.List;
 public class Transaction {
     private final Long transactionId;
     private final Integer databaseId;
-    private final Command command;
+    private final Command<?> command;
     private final List<RedoLog> redoLogs = new ArrayList<>();
     private final List<UndoLog> undoLogs = new LinkedList<>();
 
-    public Transaction(Long transactionId, Integer databaseId, Command command) {
+    public Transaction(Long transactionId, Integer databaseId, Command<?> command) {
         this.transactionId = transactionId;
         this.databaseId = databaseId;
         this.command = command;
@@ -31,7 +31,7 @@ public class Transaction {
         return databaseId;
     }
 
-    public Command getCommand() {
+    public Command<?> getCommand() {
         return command;
     }
 

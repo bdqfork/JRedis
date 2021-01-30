@@ -1,16 +1,19 @@
 package com.github.bdqfork.server;
 
-import com.github.bdqfork.core.operation.OperationContext;
-import com.github.bdqfork.core.CommandFuture;
-import com.github.bdqfork.core.exception.JRedisException;
-import com.github.bdqfork.core.protocol.LiteralWrapper;
-import com.github.bdqfork.server.ops.GenericServerOperation;
-import com.github.bdqfork.server.transaction.TransactionManager;
-
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.stream.Collectors;
+
+import com.github.bdqfork.core.CommandFuture;
+import com.github.bdqfork.core.exception.JRedisException;
+import com.github.bdqfork.core.operation.Operation;
+import com.github.bdqfork.core.operation.OperationContext;
+import com.github.bdqfork.core.protocol.LiteralWrapper;
+import com.github.bdqfork.server.ops.DefaultOperation;
+import com.github.bdqfork.server.transaction.TransactionManager;
 
 /**
  * @author bdq
@@ -21,7 +24,7 @@ public class Dispatcher {
     private volatile boolean destroyed;
     private BlockingQueue<OperationContext> queue;
     private TransactionManager transactionManager;
-    private Map<Integer, GenericServerOperation> serverOperations = new ConcurrentHashMap<>();
+    private Map<Integer, Operation> serverOperations = new ConcurrentHashMap<>();
 
     public Dispatcher(TransactionManager transactionManager, BlockingQueue<OperationContext> queue) {
         this.transactionManager = transactionManager;
@@ -69,14 +72,13 @@ public class Dispatcher {
     private void handle(OperationContext operationContext) {
         int databaseId = operationContext.getDatabaseId();
 
-        GenericServerOperation genericServerOperation = getGenericServerOperation(databaseId);
-
         String cmd = operationContext.getCmd();
         Object[] args = operationContext.getArgs();
 
         CommandFuture commandFuture = operationContext.getResultFuture();
         try {
-            LiteralWrapper<?> literalWrapper = genericServerOperation.execute(cmd, args);
+            Object result = getOperation(databaseId).exec(cmd, args);
+            LiteralWrapper<?> literalWrapper = encodeResult(result);
             commandFuture.complete(literalWrapper);
         } catch (JRedisException e) {
             commandFuture.completeExceptionally(e);
@@ -84,15 +86,32 @@ public class Dispatcher {
 
     }
 
-    private GenericServerOperation getGenericServerOperation(int databaseId) {
-        GenericServerOperation genericServerOperation;
-        if (serverOperations.containsKey(databaseId)) {
-            genericServerOperation = serverOperations.get(databaseId);
-        } else {
-            genericServerOperation = new GenericServerOperation(databaseId, transactionManager);
-            serverOperations.put(databaseId, genericServerOperation);
+    private LiteralWrapper<?> encodeResult(Object result) {
+        if (result instanceof String) {
+            return LiteralWrapper.singleWrapper((String) result);
         }
-        return genericServerOperation;
+        if (result instanceof Long) {
+            return LiteralWrapper.integerWrapper((Number) result);
+        }
+        if (result instanceof Boolean) {
+            return LiteralWrapper.integerWrapper((Boolean) result ? 1L : 0L);
+        }
+        if (result instanceof byte[]) {
+            return LiteralWrapper.bulkWrapper((byte[]) result);
+        }
+        if (result instanceof List) {
+            @SuppressWarnings("unchecked")
+            List<LiteralWrapper<?>> items = (List<LiteralWrapper<?>>) result;
+            items = items.stream().map(this::encodeResult).collect(Collectors.toList());
+            return LiteralWrapper.multiWrapper(items);
+        }
+        return LiteralWrapper.bulkWrapper();
+    }
+
+    private Operation getOperation(int databaseId) {
+        return serverOperations.computeIfAbsent(databaseId, k -> {
+            return new DefaultOperation(databaseId, transactionManager);
+        });
     }
 
     public void stop() {

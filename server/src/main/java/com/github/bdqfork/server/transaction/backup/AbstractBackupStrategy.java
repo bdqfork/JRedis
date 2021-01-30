@@ -1,10 +1,21 @@
 package com.github.bdqfork.server.transaction.backup;
 
-import java.io.*;
-
-import java.util.*;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.locks.Lock;
+import java.util.concurrent.Future;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 import com.github.bdqfork.core.serializtion.JdkSerializer;
@@ -13,9 +24,12 @@ import com.github.bdqfork.server.database.Database;
 import com.github.bdqfork.server.database.DatabaseManager;
 import com.github.bdqfork.server.transaction.OperationType;
 import com.github.bdqfork.server.transaction.RedoLog;
+import com.github.bdqfork.server.transaction.TransactionLog;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.netty.util.concurrent.DefaultThreadFactory;
 
 /**
  * @author bdq
@@ -28,11 +42,17 @@ public abstract class AbstractBackupStrategy implements BackupStrategy {
     protected static final String TEMP_SUFFIX = ".tmp";
     protected static final String LOG_FILE_NAME = "jredis.log";
     protected static final String LOG_DATE_FILE_NAME_FORMATER = "jredis.%s.log";
+
     protected final String logFilePath;
+    protected final ReentrantLock lock;
+
     private RedoLogSerializer serializer;
-    public Queue<RedoLog> operationQueue = new ConcurrentLinkedQueue<>();
-    private Lock lock = new ReentrantLock();
-    private Thread reWriteHandler;
+
+    private volatile Future<Void> future;
+
+    private Queue<TransactionLog> cacheLogs = new ConcurrentLinkedQueue<>();
+    private ThreadPoolExecutor reWriteExecutor = new ThreadPoolExecutor(1, 1, 0, TimeUnit.SECONDS,
+            new SynchronousQueue<>(), new DefaultThreadFactory("rewrite"), new ThreadPoolExecutor.DiscardPolicy());
 
     public AbstractBackupStrategy(String logFilePath) {
         this.logFilePath = logFilePath.replace("//", "/");
@@ -50,6 +70,7 @@ public abstract class AbstractBackupStrategy implements BackupStrategy {
             }
         }
         this.serializer = new RedoLogSerializer(new JdkSerializer());
+        this.lock = new ReentrantLock();
     }
 
     @Override
@@ -81,7 +102,7 @@ public abstract class AbstractBackupStrategy implements BackupStrategy {
             return Collections.emptyList();
         }
 
-        File tmpFile = new File(getFullLogFilePath() + TEMP_SUFFIX);
+        File tmpFile = new File(getTempLogFilePath());
 
         if (tmpFile.exists()) {
             tmpFile.delete();
@@ -136,6 +157,10 @@ public abstract class AbstractBackupStrategy implements BackupStrategy {
         return logFilePath + "/" + LOG_FILE_NAME;
     }
 
+    protected String getTempLogFilePath() {
+        return getFullLogFilePath() + TEMP_SUFFIX;
+    }
+
     public void setSerializer(RedoLogSerializer serializer) {
         this.serializer = serializer;
     }
@@ -145,36 +170,21 @@ public abstract class AbstractBackupStrategy implements BackupStrategy {
     }
 
     @Override
-    public void reWrite(DatabaseManager databaseManager) {
-        // TODO 扫描所有数据库，并生成RedoLog，同时序列化到磁盘
-        reWriteHandler = new Thread(() -> {
+    public void rewrite(DatabaseManager databaseManager) {
+        if (future != null) {
+            return;
+        }
+        future = reWriteExecutor.submit(() -> {
             log.debug("Rewriting...");
             List<Database> databases = databaseManager.dump();
-            Iterator<Database> iterator = databases.iterator();
-            int dataBasesSize = databases.size();
-            constructRedoLogAndWrite(dataBasesSize, iterator);
+            doRewrite(databases);
             log.info("Rewriting complete!");
+            return null;
         });
-        reWriteHandler.setName("rewrite");
-        reWriteHandler.start();
     }
 
-    @Override
-    public void storageOperation(RedoLog redoLog) {
-        operationQueue.offer(redoLog);
-    }
-
-    @Override
-    public boolean isReWriteActive() {
-        if (reWriteHandler == null) {
-            return false;
-        }
-        return reWriteHandler.isAlive();
-    }
-
-    private void constructRedoLogAndWrite(int databasesSize, Iterator<Database> iterator) {
+    private void doRewrite(List<Database> databases) {
         File newLog = new File(logFilePath + "/" + "jredis_new.log");
-
         if (newLog.exists()) {
             newLog.delete();
         }
@@ -185,44 +195,81 @@ public abstract class AbstractBackupStrategy implements BackupStrategy {
             throw new IllegalStateException(e);
         }
 
-        try(FileOutputStream fileOutputStream = new FileOutputStream(newLog)) {
-            lock.lock();
-            for (int i = 0; i < databasesSize; i++) {
-                Database database = iterator.next();
-                Set<Map.Entry<String, Object>> dictEntrySet = database.getDictMap().entrySet();
+        try (FileOutputStream fileOutputStream = new FileOutputStream(newLog)) {
+            for (int i = 0; i < databases.size(); i++) {
+                Database database = databases.get(i);
                 Map<String, Long> expiredMap = database.getExpireMap();
 
-                for (Map.Entry<String, Object> dictEntry : dictEntrySet) {
+                Map<String, Object> dictMap = database.getDictMap();
+
+                for (Map.Entry<String, Object> entry : dictMap.entrySet()) {
                     RedoLog redoLog = new RedoLog();
                     redoLog.setDatabaseId(i);
-                    String key = dictEntry.getKey();
-                    redoLog.setKey(key);
-                    redoLog.setValue(dictEntry.getValue());
+                    redoLog.setKey(entry.getKey());
+                    redoLog.setValue(entry.getValue());
                     redoLog.setOperationType(OperationType.UPDATE);
-                    Long expired = expiredMap.get(key);
-                    if (expired == null){
+
+                    Long expired = expiredMap.get(entry.getKey());
+                    if (expired == null) {
                         redoLog.setExpireAt(-1L);
                     } else {
                         redoLog.setExpireAt(expired);
                     }
+
                     byte[] data = serializer.serialize(redoLog);
                     fileOutputStream.write(data);
                 }
             }
 
-            while (!operationQueue.isEmpty()) {
-                RedoLog redoLog = operationQueue.poll();
-                byte[] data = serializer.serialize(redoLog);
-                fileOutputStream.write(data);
-            }
         } catch (IOException e) {
             log.warn("An error occurs during rewrite process: {}", e.getMessage());
-            throw new IllegalStateException(e);
-        } finally {
-            lock.unlock();
         }
-        File oldLog = new File(getFullLogFilePath());
-        oldLog.renameTo(new File(getOldLogFilePath()));
-        newLog.renameTo(new File(getFullLogFilePath()));
+
     }
+
+    @Override
+    public void backup(TransactionLog transactionLog) {
+        synchronized (this) {
+
+            doBackup(transactionLog);
+
+            if (future != null) {
+                if (!future.isDone()) {
+                    cacheLogs.offer(transactionLog);
+                    return;
+                }
+
+                try (FileOutputStream fileOutputStream = new FileOutputStream(getTempLogFilePath())) {
+                    while (!cacheLogs.isEmpty()) {
+                        TransactionLog log = cacheLogs.poll();
+                        for (RedoLog redoLog : log.getRedoLogs()) {
+                            byte[] data = serializer.serialize(redoLog);
+                            fileOutputStream.write(data);
+                        }
+                    }
+                } catch (IOException e) {
+                    log.warn("failed to rewrite, due to {}", e.getMessage());
+                }
+
+                while (lock.tryLock()) {
+                    try {
+                        File curLogFile = new File(getFullLogFilePath());
+                        curLogFile.renameTo(new File(getOldLogFilePath()));
+
+                        File tempLogFile = new File(getTempLogFilePath());
+                        tempLogFile.renameTo(new File(getFullLogFilePath()));
+
+                        break;
+                    } finally {
+                        lock.unlock();
+                    }
+                }
+
+                future = null;
+                return;
+            }
+        }
+    }
+
+    protected abstract void doBackup(TransactionLog transactionLog);
 }

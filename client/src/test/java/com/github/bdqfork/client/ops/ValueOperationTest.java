@@ -1,11 +1,10 @@
 package com.github.bdqfork.client.ops;
 
-import com.github.bdqfork.core.operation.ValueOperation;
+import java.io.Serializable;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.Serializable;
 
 public class ValueOperationTest {
     JRedisClient client;
@@ -15,7 +14,7 @@ public class ValueOperationTest {
     public void setUp() throws Exception {
         client = new JRedisClient("127.0.0.1", 7000, 0);
         client.connect();
-        operation = client.OpsForValue();
+        operation = client.opsForValue();
     }
 
     @After
@@ -76,7 +75,7 @@ public class ValueOperationTest {
     public void getTest() {
         get("test4");
         get("test5");
-        client.OpsForKey().del("test4");
+        client.opsForKey().del("test4");
         get("test4");
     }
 

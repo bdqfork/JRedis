@@ -3,6 +3,7 @@ package com.github.bdqfork.server.database;
 import com.github.bdqfork.core.util.DateUtils;
 
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -110,10 +111,10 @@ public class Database {
     }
 
     public Map<String, Object> getDictMap() {
-        return dictMap;
+        return Collections.unmodifiableMap(dictMap);
     }
 
     public Map<String, Long> getExpireMap() {
-        return expireMap;
+        return Collections.unmodifiableMap(expireMap);
     }
 }

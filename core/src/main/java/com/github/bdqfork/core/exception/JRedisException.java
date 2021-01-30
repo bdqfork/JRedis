@@ -17,4 +17,9 @@ public class JRedisException extends RuntimeException {
     public JRedisException(Throwable cause) {
         super(cause);
     }
+
+    public JRedisException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
 }

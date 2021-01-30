@@ -44,16 +44,17 @@ public class ScheduledBackup extends AbstractBackupStrategy {
                     TransactionLog transactionLog = transactionLogs.poll();
                     buffer.add(transactionLog);
                 }
-                doBackup(buffer);
+                if (lock.tryLock()) {
+                    try {
+                        doBackup(buffer);
+                    } finally {
+                        lock.unlock();
+                    }
+                }
             }
 
         }, intervals, intervals);
         log.info("Scheduled backup started !");
-    }
-
-    @Override
-    public void backup(TransactionLog transactionLog) {
-        transactionLogs.add(transactionLog);
     }
 
     protected void doBackup(List<TransactionLog> transactionLogs) {
@@ -75,6 +76,11 @@ public class ScheduledBackup extends AbstractBackupStrategy {
                 throw new IllegalStateException(e);
             }
         }
+    }
+
+    @Override
+    protected void doBackup(TransactionLog transactionLog) {
+        transactionLogs.add(transactionLog);
     }
 
 }

@@ -1,10 +1,10 @@
-package com.github.bdqfork.core.operation;
+package com.github.bdqfork.client.ops;
 
 /**
  * @author bdq
  * @since 2020/11/17
  */
-public interface KeyOperation extends Operation {
+public interface KeyOperation {
     /**
      * 删除一个键值对
      *
