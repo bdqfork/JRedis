@@ -14,6 +14,8 @@ import com.github.bdqfork.server.transaction.TransactionManager;
  */
 
 public class SetnxCommandHandler extends AbstractCommandHandler {
+    public static final int ARGS_NUM = 2;
+
     public SetnxCommandHandler(Integer databaseId, TransactionManager transactionManager) {
         super(databaseId, transactionManager);
     }
@@ -46,5 +48,10 @@ public class SetnxCommandHandler extends AbstractCommandHandler {
     @Override
     public boolean support(String cmd) {
         return "setnx".equals(cmd);
+    }
+
+    @Override
+    public boolean supportArgs(Object[] args) {
+        return args.length == ARGS_NUM;
     }
 }

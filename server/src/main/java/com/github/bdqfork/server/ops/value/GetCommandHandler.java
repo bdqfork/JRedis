@@ -11,6 +11,7 @@ import com.github.bdqfork.server.transaction.TransactionManager;
  */
 
 public class GetCommandHandler extends AbstractCommandHandler {
+    public static final int ARGS_NUM = 1;
 
     public GetCommandHandler(Integer databaseId, TransactionManager transactionManager) {
         super(databaseId, transactionManager);
@@ -39,5 +40,10 @@ public class GetCommandHandler extends AbstractCommandHandler {
     @Override
     public boolean support(String cmd) {
         return "get".equals(cmd);
+    }
+
+    @Override
+    public boolean supportArgs(Object[] args) {
+        return args.length == ARGS_NUM;
     }
 }

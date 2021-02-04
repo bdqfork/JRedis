@@ -12,6 +12,8 @@ import com.github.bdqfork.server.transaction.TransactionManager;
  */
 
 public class SetpxCommandHandler extends AbstractCommandHandler {
+    public static final int ARGS_NUM = 3;
+
     public SetpxCommandHandler(Integer databaseId, TransactionManager transactionManager) {
         super(databaseId, transactionManager);
     }
@@ -40,5 +42,13 @@ public class SetpxCommandHandler extends AbstractCommandHandler {
     @Override
     public boolean support(String cmd) {
         return "setpx".equals(cmd);
+    }
+
+    @Override
+    public boolean supportArgs(Object[] args) {
+        if (args.length == ARGS_NUM) {
+            return args[2] instanceof Long;
+        }
+        return false;
     }
 }

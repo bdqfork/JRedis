@@ -86,8 +86,11 @@ public class CommandLineClient {
     }
 
     private Object[] getArgs(String cmd, String[] lits) {
-        List<Object> args = Arrays.stream(lits).skip(1)
+        List<Object> args = Arrays.stream(lits).skip(2)
                 .map(lit -> StringUtils.isNumeric(lit) ? Long.parseLong(lit) : lit).collect(Collectors.toList());
+        if (lits.length >= 2) {
+            args.add(0, lits[1]);
+        }
         if ("set".equals(cmd)) {
             if (args.size() == 3) {
                 if (!(args.get(2) instanceof Long)) {

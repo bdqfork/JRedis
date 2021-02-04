@@ -34,4 +34,9 @@ public class ValueCommandHandler implements CommandHandler {
         return handlers.containsKey(cmd);
     }
 
+    @Override
+    public boolean supportArgs(Object[] args) {
+        return true;
+    }
+
 }

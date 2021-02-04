@@ -19,6 +19,11 @@ public class RewriteCommandHandler extends AbstractCommandHandler {
     }
 
     @Override
+    public boolean supportArgs(Object[] args) {
+        return args.length == 0;
+    }
+
+    @Override
     protected Command<?> parse(String cmd, Object[] args) {
         return new QueryCommand<Void>() {
 

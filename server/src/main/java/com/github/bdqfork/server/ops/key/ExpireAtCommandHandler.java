@@ -6,6 +6,7 @@ import com.github.bdqfork.server.ops.UpdateCommand;
 import com.github.bdqfork.server.transaction.TransactionManager;
 
 public class ExpireAtCommandHandler extends AbstractCommandHandler {
+    public final static int ARGS_NUM = 2;
 
     public ExpireAtCommandHandler(Integer databaseId, TransactionManager transactionManager) {
         super(databaseId, transactionManager);
@@ -14,6 +15,14 @@ public class ExpireAtCommandHandler extends AbstractCommandHandler {
     @Override
     public boolean support(String cmd) {
         return "expireAt".equals(cmd);
+    }
+
+    @Override
+    public boolean supportArgs(Object[] args) {
+        if (args.length == ARGS_NUM) {
+            return args[1] instanceof Long;
+        }
+        return false;
     }
 
     @Override

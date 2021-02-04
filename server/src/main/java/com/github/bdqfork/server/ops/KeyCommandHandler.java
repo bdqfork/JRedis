@@ -28,6 +28,11 @@ public class KeyCommandHandler implements CommandHandler {
     }
 
     @Override
+    public boolean supportArgs(Object[] args) {
+        return true;
+    }
+
+    @Override
     public Object handle(String cmd, Object... args) {
         if (support(cmd)) {
             return handlers.get(cmd).handle(cmd, args);

@@ -6,6 +6,7 @@ import com.github.bdqfork.server.ops.QueryCommand;
 import com.github.bdqfork.server.transaction.TransactionManager;
 
 public class TtlCommandHandler extends AbstractCommandHandler {
+    public static final int ARGS_NUM = 1;
 
     public TtlCommandHandler(Integer databaseId, TransactionManager transactionManager) {
         super(databaseId, transactionManager);
@@ -14,6 +15,11 @@ public class TtlCommandHandler extends AbstractCommandHandler {
     @Override
     public boolean support(String cmd) {
         return "ttl".equals(cmd);
+    }
+
+    @Override
+    public boolean supportArgs(Object[] args) {
+        return args.length == ARGS_NUM;
     }
 
     @Override
@@ -35,7 +41,7 @@ public class TtlCommandHandler extends AbstractCommandHandler {
                 if (ttl == null) {
                     ttl = -1L;
                 }
-                return null;
+                return ttl;
             }
         };
     }

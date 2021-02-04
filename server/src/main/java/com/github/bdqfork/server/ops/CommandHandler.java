@@ -17,4 +17,12 @@ public interface CommandHandler {
      * @return boolean
      */
     boolean support(String cmd);
+
+    /**
+     * 判断参数是否能处理
+     *
+     * @param args 参数个数
+     * @return boolean
+     */
+    boolean supportArgs(Object[] args);
 }

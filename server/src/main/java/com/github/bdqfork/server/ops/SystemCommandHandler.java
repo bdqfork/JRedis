@@ -28,4 +28,9 @@ public class SystemCommandHandler implements CommandHandler {
         return handlers.containsKey(cmd);
     }
 
+    @Override
+    public boolean supportArgs(Object[] args) {
+        return args.length == 0;
+    }
+
 }
