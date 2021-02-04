@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.github.bdqfork.core.exception.JRedisException;
+import com.github.bdqfork.server.ops.value.*;
 import com.github.bdqfork.server.transaction.TransactionManager;
 
 public class ValueCommandHandler implements CommandHandler {
@@ -11,6 +12,13 @@ public class ValueCommandHandler implements CommandHandler {
 
     public ValueCommandHandler(Integer databaseId, TransactionManager transactionManager) {
         // TODO: 添加子handler
+        // TODO: SETEX SETPX SETNX SETXX
+        handlers.put("get", new GetCommandHandler(databaseId, transactionManager));
+        handlers.put("set", new SetCommandHandler(databaseId, transactionManager));
+        handlers.put("setex", new SetexCommandHandler(databaseId, transactionManager));
+        handlers.put("setpx", new SetpxCommandHandler(databaseId, transactionManager));
+        handlers.put("setnx", new SetnxCommandHandler(databaseId, transactionManager));
+        handlers.put("setxx", new SetxxCommandHandler(databaseId, transactionManager));
     }
 
     @Override
