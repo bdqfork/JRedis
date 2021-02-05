@@ -2,12 +2,15 @@ package com.github.bdqfork.server.database;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class DatabaseManager {
     private List<Database> databases;
     private Lock lock = new ReentrantLock();
+    private volatile boolean dumping = false;
 
     public DatabaseManager(int size) {
         databases = new ArrayList<>(size);
@@ -22,11 +25,15 @@ public class DatabaseManager {
      * @param key 键
      */
     public void delete(int databaseId, String key) {
-        try {
-            lock.lock();
+        if (dumping) {
+            try {
+                lock.lock();
+                databases.get(databaseId).delete(key);
+            } finally {
+                lock.unlock();
+            }
+        } else {
             databases.get(databaseId).delete(key);
-        } finally {
-            lock.unlock();
         }
     }
 
@@ -37,11 +44,15 @@ public class DatabaseManager {
      * @param value 值
      */
     public void saveOrUpdate(int databaseId, String key, Object value, Long expire) {
-        try {
-            lock.lock();
+        if (dumping) {
+            try {
+                lock.lock();
+                databases.get(databaseId).saveOrUpdate(key, value, expire);
+            } finally {
+                lock.unlock();
+            }
+        } else {
             databases.get(databaseId).saveOrUpdate(key, value, expire);
-        } finally {
-            lock.unlock();
         }
     }
 
@@ -51,6 +62,9 @@ public class DatabaseManager {
      * @param key 键
      */
     public Object get(int databaseId, String key) {
+        if (!dumping) {
+            return databases.get(databaseId).get(key);
+        }
         try {
             lock.lock();
             return databases.get(databaseId).get(key);
@@ -65,6 +79,9 @@ public class DatabaseManager {
      * @param key 键
      */
     public Long ttl(int databaseId, String key) {
+        if (!dumping) {
+            return databases.get(databaseId).ttl(key);
+        }
         try {
             lock.lock();
             return databases.get(databaseId).ttl(key);
@@ -79,6 +96,9 @@ public class DatabaseManager {
      * @param key 键
      */
     public Long ttlAt(int databaseId, String key) {
+        if (!dumping) {
+            return databases.get(databaseId).ttlAt(key);
+        }
         try {
             lock.lock();
             return databases.get(databaseId).ttlAt(key);
@@ -88,11 +108,15 @@ public class DatabaseManager {
     }
 
     public void expire(int databaseId, String key, long expire) {
-        try {
-            lock.lock();
+        if (dumping) {
+            try {
+                lock.lock();
+                databases.get(databaseId).expire(key, expire);
+            } finally {
+                lock.unlock();
+            }
+        } else {
             databases.get(databaseId).expire(key, expire);
-        } finally {
-            lock.unlock();
         }
     }
 
@@ -104,13 +128,17 @@ public class DatabaseManager {
     public List<Database> dump() {
         try {
             lock.lock();
+            dumping = true;
             List<Database> dumps = new ArrayList<>(this.databases.size());
             for (Database database : this.databases) {
-                Database dump = database.dump();
+                Map<String, Object> dictMapDump = new ConcurrentHashMap<>(database.getDictMap());
+                Map<String, Long> expireMapDump = new ConcurrentHashMap<>(database.getExpireMap());
+                Database dump = new Database(dictMapDump, expireMapDump);
                 dumps.add(dump);
             }
             return dumps;
         } finally {
+            dumping = false;
             lock.unlock();
         }
     }

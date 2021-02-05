@@ -11,8 +11,6 @@ public class ValueCommandHandler implements CommandHandler {
     private Map<String, CommandHandler> handlers = new HashMap<>();
 
     public ValueCommandHandler(Integer databaseId, TransactionManager transactionManager) {
-        // TODO: 添加子handler
-        // TODO: SETEX SETPX SETNX SETXX
         handlers.put("get", new GetCommandHandler(databaseId, transactionManager));
         handlers.put("set", new SetCommandHandler(databaseId, transactionManager));
         handlers.put("setex", new SetexCommandHandler(databaseId, transactionManager));

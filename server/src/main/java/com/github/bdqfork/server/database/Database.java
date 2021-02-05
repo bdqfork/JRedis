@@ -22,7 +22,7 @@ public class Database {
         this(new ConcurrentHashMap<>(256), new ConcurrentHashMap<>(256));
     }
 
-    private Database(Map<String, Object> dictMap, Map<String, Long> expireMap) {
+    public Database(Map<String, Object> dictMap, Map<String, Long> expireMap) {
         this.dictMap = dictMap;
         this.expireMap = expireMap;
     }
@@ -100,14 +100,6 @@ public class Database {
 
     public void expire(String key, long expire) {
         expireMap.put(key, expire);
-    }
-
-    public Database dump() {
-        Map<String, Object> dictMapDump = new ConcurrentHashMap<>(this.dictMap.size());
-        dictMapDump.putAll(this.dictMap);
-        Map<String, Long> expireMapDump = new ConcurrentHashMap<>(this.expireMap.size());
-        expireMapDump.putAll(expireMapDump);
-        return new Database(dictMapDump, expireMapDump);
     }
 
     public Map<String, Object> getDictMap() {
