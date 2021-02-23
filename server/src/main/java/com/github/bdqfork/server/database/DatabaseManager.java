@@ -1,22 +1,39 @@
 package com.github.bdqfork.server.database;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class DatabaseManager {
+    private static Logger log = LoggerFactory.getLogger(DatabaseManager.class);
     private List<Database> databases;
     private Lock lock = new ReentrantLock();
     private volatile boolean dumping = false;
 
-    public DatabaseManager(int size) {
+    public DatabaseManager(int size, long expiredCleanUpIntervals) {
         databases = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
             databases.add(new Database());
         }
+
+        Timer timer = new Timer("expired-cleanup");
+        timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                log.debug("cleaning up...");
+                for (int id = 0; id < databases.size(); id++) {
+                    Database database = databases.get(id);
+                    Set<String> keys = database.getDictMap().keySet();
+                    for (String key : keys) {
+                        ttl(id, key);
+                    }
+                }
+            }
+        }, expiredCleanUpIntervals, expiredCleanUpIntervals);
     }
 
     /**
@@ -122,7 +139,7 @@ public class DatabaseManager {
 
     /**
      * 获取数据库备份
-     * 
+     *
      * @return List<Database>
      */
     public List<Database> dump() {

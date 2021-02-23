@@ -108,12 +108,16 @@ public class JRedisServer {
         Long logIntervals = Long
                 .valueOf(properties.getProperty("log.intervals", Configuration.DEFAULT_CONFIG_LOG_INTERVALS));
         configuration.setLogIntervals(logIntervals);
+
+        Long expiredCleanUpIntervals = Long
+                .valueOf(properties.getProperty("expired.cleanup.intervals", Configuration.DEFAULT_CONFIG_EXPIRED_CLEANUP_INTERVALS));
+        configuration.setExpiredCleanUpIntervals(expiredCleanUpIntervals);
     }
 
     /**
      * 初始化所有数据库
      */
     private void initializeDatabases() {
-        databaseManager = new DatabaseManager(configuration.getDatabaseNumber());
+        databaseManager = new DatabaseManager(configuration.getDatabaseNumber(), configuration.getExpiredCleanUpIntervals());
     }
 }
