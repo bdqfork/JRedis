@@ -29,7 +29,12 @@ public class DatabaseManager {
                     Database database = databases.get(id);
                     Set<String> keys = database.getDictMap().keySet();
                     for (String key : keys) {
-                        ttl(id, key);
+                        try {
+                            lock.lock();
+                            databases.get(id).ttl(key);
+                        } finally {
+                            lock.unlock();
+                        }
                     }
                 }
             }
