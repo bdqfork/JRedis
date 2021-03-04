@@ -18,40 +18,69 @@ public class DefaultValueOperation implements ValueOperation {
 
     @Override
     public void set(String key, Object value) {
-        operation.exec("set", key, value);
+        try {
+            operation.exec("set", key, serializer.serialize(value));
+        } catch (SerializeException e) {
+            throw new JRedisException(e);
+        }
     }
 
     @Override
     public void set(String key, Object value, long expire, TimeUnit timeUnit) {
-        operation.exec("set", key, value, timeUnit.toMillis(expire));
+        try {
+            operation.exec("set", key, serializer.serialize(value), timeUnit.toMillis(expire));
+        } catch (SerializeException e) {
+            throw new JRedisException(e);
+        }
     }
 
     @Override
     public void setex(String key, Object value, long expire) {
-        operation.exec("setex", key, value, expire);
+        try {
+            operation.exec("setex", key, serializer.serialize(value), expire);
+        } catch (SerializeException e) {
+            throw new JRedisException(e);
+        }
     }
 
     @Override
     public void setpx(String key, Object value, long expire) {
-        operation.exec("setpx", key, value, expire);
+        try {
+            operation.exec("setpx", key, serializer.serialize(value), expire);
+        } catch (SerializeException e) {
+            throw new JRedisException(e);
+        }
     }
 
     @Override
     public boolean setnx(String key, Object value) {
-        byte[] result = (byte[]) operation.exec("setnx", key, value);
-        return (boolean) deserialize(result);
+        long result;
+        try {
+            result = (long) operation.exec("setnx", key, serializer.serialize(value));
+        } catch (SerializeException e) {
+            throw new JRedisException(e);
+        }
+        return result == 1;
     }
 
     @Override
     public boolean setxx(String key, Object value) {
-        byte[] result = (byte[]) operation.exec("setxx", key, value);
-        return (boolean) deserialize(result);
+        long result;
+        try {
+            result = (long) operation.exec("setnx", key, serializer.serialize(value));
+        } catch (SerializeException e) {
+            throw new JRedisException(e);
+        }
+        return result == 1;
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public <T> T get(String key) {
         byte[] result = (byte[]) operation.exec("get", key);
+        if (result == null) {
+            return null;
+        }
         return (T) deserialize(result);
     }
 

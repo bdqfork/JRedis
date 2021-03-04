@@ -61,9 +61,9 @@ public class CommandHandler extends SimpleChannelInboundHandler<Object> {
 
         SessionHolder.setSession(session);
 
-        LiteralWrapper<?> literalWrapper = LiteralWrapper.singleWrapper();
-        literalWrapper.setData("Connect Ok!");
-        ctx.writeAndFlush(literalWrapper.encode());
+//        LiteralWrapper<?> literalWrapper = LiteralWrapper.singleWrapper();
+//        literalWrapper.setData("Connect Ok!");
+//        ctx.writeAndFlush(literalWrapper.encode());
     }
 
 }
