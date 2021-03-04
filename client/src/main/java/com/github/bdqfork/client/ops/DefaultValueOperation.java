@@ -77,12 +77,16 @@ public class DefaultValueOperation implements ValueOperation {
     @SuppressWarnings("unchecked")
     @Override
     public <T> T get(String key) {
-        byte[] result = (byte[]) operation.exec("get", key);
+        Object result = operation.exec("get", key);
         if (result == null) {
             return null;
         }
-        return (T) deserialize(result);
+        if (result instanceof byte[]) {
+            return (T) deserialize((byte[]) result);
+        }
+        return (T) result;
     }
+
 
     private Object deserialize(byte[] bytes) {
         try {
